@@ -1,0 +1,111 @@
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+
+.dance-repo-root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.dance-repo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dance-repo-header-title {
+  font-weight: 600;
+}
+.dance-repo-actions .dance-repo-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.dance-repo-phone {
+  position: relative;
+  align-self: center;
+  width: min(100%, 420px);
+  aspect-ratio: 9 / 16;
+  background: var(--background-secondary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+
+.dance-repo-video-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+.dance-repo-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dance-repo-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.8) 100%);
+  color: #fff;
+}
+.dance-repo-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.dance-repo-desc {
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.dance-repo-nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: background 0.1s ease-in-out;
+  z-index: 2;
+}
+.dance-repo-nav:hover { background: rgba(0,0,0,0.1); }
+.dance-repo-nav.left { left: 0; }
+.dance-repo-nav.right { right: 0; }
+
+/* Library modal */
+.dance-repo-library {
+  padding: 12px;
+}
+.dance-repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.dance-repo-card {
+  background: var(--background-secondary);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+}
+.dance-repo-thumb { height: 100px; background: #111; display: grid; place-items: center; }
+.dance-repo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.dance-repo-thumb-fallback { color: #fff; font-weight: 800; font-size: 1.6rem; }
+.dance-repo-card-info { padding: 8px; }
+.dance-repo-card-title { font-weight: 600; }
+.dance-repo-card-meta { opacity: 0.7; font-size: 0.85rem; }
