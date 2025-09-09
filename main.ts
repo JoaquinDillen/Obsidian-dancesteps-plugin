@@ -1,6 +1,7 @@
-import { Plugin, WorkspaceLeaf } from "obsidian";
+import { Plugin, WorkspaceLeaf, TFile, Notice } from "obsidian";
 import { DanceRepoSettingTab, DEFAULT_SETTINGS, type DanceRepoSettings } from "./src/settings";
 import { DanceRepoView, VIEW_TYPE_DANCE_REPO } from "./src/view";
+import { organizeVideoFile, VIDEO_EXTS } from "./src/organize";
 
 export default class DanceRepoPlugin extends Plugin {
     settings: DanceRepoSettings;
@@ -29,7 +30,8 @@ export default class DanceRepoPlugin extends Plugin {
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_DANCE_REPO);
         let leaf: WorkspaceLeaf | null = leaves.length > 0 ? leaves[0] : null;
         if (!leaf) {
-            const target = workspace.getRightLeaf(false) ?? workspace.getLeaf(true);
+            // Open in the main workspace area (a full tab), not the right sidebar
+            const target = workspace.getLeaf(true);
             await target.setViewState({ type: VIEW_TYPE_DANCE_REPO, active: true });
             leaf = target;
         }

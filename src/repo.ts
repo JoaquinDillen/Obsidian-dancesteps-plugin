@@ -50,6 +50,27 @@ async function readSidecarDescription(vault: Vault, file: TFile): Promise<string
   }
 }
 
+async function readSidecarFrontmatter(vault: Vault, file: TFile): Promise<Record<string, any> | null> {
+  const parent = file.parent;
+  if (!parent) return null;
+  const md = parent.children.find((c) => c instanceof TFile && c.extension.toLowerCase() === "md" && c.basename === file.basename) as TFile | undefined;
+  if (!md) return null;
+  try {
+    const content = await vault.read(md);
+    if (content.startsWith("---")) {
+      const end = content.indexOf("\n---", 3);
+      if (end > 0) {
+        const yaml = content.slice(3, end).trim();
+        const data = parseYaml(yaml) as any;
+        return data ?? null;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export interface ScanOptions {
   rootFolder?: string; // vault-relative
 }
@@ -66,12 +87,23 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
     const relPathWithinRoot = allowedPrefix ? f.path.slice(allowedPrefix.length) : f.path;
     const parts = relPathWithinRoot.split("/");
     // infer categories from first three parent folders if present: dance/style/class
-    const name = f.basename;
-    const dance = parts.length > 1 ? parts[0] : undefined;
-    const style = parts.length > 2 ? parts[1] : undefined;
-    const classLevel = parts.length > 3 ? parts[2] : undefined;
+    let name = f.basename;
+    let dance = parts.length > 1 ? parts[0] : undefined;
+    let style = parts.length > 2 ? parts[1] : undefined;
+    let classLevel = parts.length > 3 ? parts[2] : undefined;
     const thumb = findThumbFor(vault, f);
-    const description = await readSidecarDescription(vault, f);
+    let description = await readSidecarDescription(vault, f);
+
+    // If sidecar frontmatter exists, override with explicit values
+    const fm = await readSidecarFrontmatter(vault, f);
+    if (fm) {
+      if (typeof fm.stepName === "string" && fm.stepName.trim()) name = fm.stepName.trim();
+      if (typeof fm.description === "string" && fm.description.trim()) description = fm.description.trim();
+      if (typeof fm.dance === "string" && fm.dance.trim()) dance = fm.dance.trim();
+      if (typeof fm.style === "string" && fm.style.trim()) style = fm.style.trim();
+      if (typeof fm.class === "string" && fm.class.trim()) classLevel = fm.class.trim();
+      if (typeof fm.classLevel === "string" && fm.classLevel.trim()) classLevel = fm.classLevel.trim();
+    }
 
     items.push({
       path: f.path,
@@ -91,3 +123,60 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
   return items;
 }
 
+export async function upsertSidecarMetadata(
+  vault: Vault,
+  videoPath: string,
+  meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; classLevel: string }>
+): Promise<void> {
+  const af = vault.getAbstractFileByPath(videoPath);
+  if (!(af instanceof TFile)) return;
+  const parent = af.parent;
+  if (!parent) return;
+  const mdPath = normalizePath(`${parent.path}/${af.basename}.md`);
+  const existing = vault.getAbstractFileByPath(mdPath);
+
+  const fm: Record<string, any> = {};
+  if (existing instanceof TFile) {
+    try {
+      const content = await vault.read(existing);
+      if (content.startsWith("---")) {
+        const end = content.indexOf("\n---", 3);
+        if (end > 0) {
+          const yaml = content.slice(3, end).trim();
+          Object.assign(fm, parseYaml(yaml) as any);
+          const body = content.slice(end + 4);
+          // keep body if any
+          fm.__body = body;
+        }
+      } else {
+        fm.__body = content;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // apply updates
+  if (meta.stepName !== undefined) fm.stepName = meta.stepName;
+  if (meta.description !== undefined) fm.description = meta.description;
+  if (meta.dance !== undefined) fm.dance = meta.dance;
+  if (meta.style !== undefined) fm.style = meta.style;
+  const cls = meta.class ?? meta.classLevel;
+  if (cls !== undefined) fm.class = cls;
+
+  const lines: string[] = ["---"];
+  for (const [k, v] of Object.entries(fm)) {
+    if (k === "__body") continue;
+    if (v === undefined) continue;
+    lines.push(`${k}: ${String(v)}`);
+  }
+  lines.push("---");
+  const body = typeof fm.__body === "string" ? fm.__body.replace(/^\n+/, "") : "";
+  const out = lines.join("\n") + "\n\n" + body;
+
+  if (existing instanceof TFile) {
+    await vault.modify(existing, out);
+  } else {
+    await vault.create(mdPath, out);
+  }
+}
