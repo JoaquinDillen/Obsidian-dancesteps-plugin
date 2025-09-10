@@ -61,7 +61,7 @@ class VideoImportModal extends Modal {
 
     this.fileInput = controlEl.createEl("input", {
       type: "file",
-      attr: { accept: ".mp4,.mov,.webm,.m4v,.ogg" },
+      attr: { accept: ".mp4,.avi,.mov,.webm,.m4v,.ogg,video/*" },
     });
 
     // Import button

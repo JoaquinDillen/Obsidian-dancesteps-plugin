@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dashboard } from "./external-app/components/Dashboard";
 import type { StepItem as AppStep } from "./external-app/types/dance";
 import type { DanceStepItem } from "./types";
@@ -12,13 +12,19 @@ type Props = {
     revealPath: (p: string) => Promise<void>;
     copyPath: (p: string) => Promise<void>;
     saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string }>) => Promise<void>;
+    importVideo?: (file: File) => Promise<DanceStepItem>;
   };
 };
 
 export default function ObsidianApp({ items, toUrl, actions }: Props) {
-  // Map vault items -> your app's StepItem shape, converting to vault URLs
-  const steps: AppStep[] = useMemo(() => {
-    return items.map((it) => ({
+  // Local state for steps so we can append newly imported videos without a full rescan
+  const [allSteps, setAllSteps] = useState<AppStep[]>([]);
+  const [externalEdit, setExternalEdit] = useState<{ step: AppStep; token: number } | null>(null);
+  const tokenRef = useRef(0);
+
+  // Initialize/refresh from props
+  useEffect(() => {
+    const mapped = items.map((it) => ({
       id: it.path,
       videoImport: toUrl(it.path),
       stepName: it.name || it.basename,
@@ -32,29 +38,51 @@ export default function ObsidianApp({ items, toUrl, actions }: Props) {
       playCount: 0,
       lastPlayedAt: undefined,
     }));
+    setAllSteps(mapped);
   }, [items, toUrl]);
 
   const handleAddStep = () => {
-    // Open the library modal and let the user pick an item
-    // Use the global Obsidian app instance available in the renderer
-    const app = (window as any)?.app;
-    if (!app) {
-      console.warn("Obsidian app not found on window");
-      return;
-    }
-    const modal = new LibraryModal(app, items, (index) => {
-      const picked = items[index];
-      // If host actions are available, open the picked file in Obsidian
-      if (actions?.openPath) {
-        actions.openPath(picked.path);
+    // Open a file picker to import a local video, then open editor
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".mp4,.avi,video/*";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const newItem = await (actions as any)?.importVideo?.(file);
+        if (!newItem) return;
+        const mapped: AppStep = {
+          id: newItem.path,
+          videoImport: toUrl(newItem.path),
+          stepName: newItem.name || newItem.basename,
+          description: newItem.description,
+          class: newItem.classLevel,
+          dance: newItem.dance,
+          style: newItem.style,
+          thumbnail: newItem.thumbPath ? toUrl(newItem.thumbPath) : undefined,
+          duration: undefined,
+          addedAt: Date.now(),
+          playCount: 0,
+          lastPlayedAt: undefined,
+        };
+        setAllSteps((prev) => {
+          // avoid duplicates by path
+          if (prev.some((s) => s.id === mapped.id)) return prev;
+          return [...prev, mapped];
+        });
+        tokenRef.current += 1;
+        setExternalEdit({ step: mapped, token: tokenRef.current });
+      } catch (e) {
+        console.error("Import failed", e);
       }
-    });
-    modal.open();
+    };
+    input.click();
   };
 
   return (
     <Dashboard
-      steps={steps}
+      steps={allSteps}
       onStepSelect={(step) => {
         // Placeholder for viewer routing
         console.log("Selected:", step.id);
@@ -74,6 +102,7 @@ export default function ObsidianApp({ items, toUrl, actions }: Props) {
           class: updated.class,
         });
       }}
+      externalEdit={externalEdit}
     />
   );
 }

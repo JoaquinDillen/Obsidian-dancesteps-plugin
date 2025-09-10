@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StepItem } from "../types/dance";
 import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
@@ -12,9 +12,10 @@ interface GridLibraryProps {
   onStepSelect: (step: StepItem) => void;
   onEditStep: (step: StepItem) => void;
   onDeleteStep: (stepId: string) => void;
+  onPlayFull?: (step: StepItem) => void;
 }
 
-export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep }: GridLibraryProps) {
+export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onPlayFull }: GridLibraryProps) {
   if (steps.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -44,13 +45,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep }: G
                     alt={step.stepName}
                   />
                 ) : (
-                  // Fallback to showing first video frame when no thumbnail is available
-                  <video
-                    src={step.videoImport}
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
+                  <VideoThumb src={step.videoImport} alt={step.stepName} />
                 )}
 
                 {/* Options Menu (top-right) */}
@@ -61,7 +56,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep }: G
                       e.stopPropagation();
                     }}
                   >
-                    <MoreVertical style={{ width: 12, height: 12 }} />
+                    <MoreVertical className="dr-card-menu-icon" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
@@ -87,9 +82,14 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep }: G
 
                 {/* Center play icon */}
                 <div className="dr-card-play">
-                  <div className="dr-play-circle">
+                  <button
+                    type="button"
+                    className="dr-play-circle"
+                    onClick={(e) => { e.stopPropagation(); onPlayFull?.(step); }}
+                    aria-label="Play fullscreen"
+                  >
                     <Play style={{ width: 16, height: 16, color: '#fff' }} />
-                  </div>
+                  </button>
                 </div>
 
                 {/* Title + tags overlay with bottom gradient */}
@@ -122,5 +122,62 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep }: G
         ))}
       </div>
     </div>
+  );
+}
+
+function VideoThumb({ src, alt }: { src: string; alt?: string }) {
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+  const triedRef = useRef(false);
+
+  useEffect(() => {
+    if (!src || triedRef.current) return;
+    triedRef.current = true;
+    const video = document.createElement("video");
+    video.muted = true;
+    (video as any).playsInline = true;
+    video.preload = "auto";
+    video.src = src;
+    const onLoaded = async () => {
+      try {
+        // Seek to a tiny offset to ensure a frame is available
+        try { video.currentTime = Math.min(0.1, (video.duration || 1) * 0.01); } catch {}
+        const w = video.videoWidth || 320;
+        const h = video.videoHeight || 180;
+        const canvas = document.createElement("canvas");
+        // Normalize size to reduce memory
+        const targetW = 320;
+        const targetH = Math.round((h / w) * targetW) || 180;
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, targetW, targetH);
+          const url = canvas.toDataURL("image/jpeg", 0.7);
+          setThumbUrl(url);
+        }
+      } catch {
+        // ignore, fallback to inline video element
+      }
+    };
+    video.addEventListener("loadeddata", onLoaded, { once: true });
+    return () => {
+      video.removeEventListener("loadeddata", onLoaded);
+    };
+  }, [src]);
+
+  if (thumbUrl) {
+    return <img src={thumbUrl} alt={alt} />;
+  }
+  // Fallback to inline video preview (may not render a frame on some Android devices)
+  return (
+    <video
+      src={src}
+      muted
+      preload="metadata"
+      playsInline
+      onLoadedData={(e) => {
+        try { (e.currentTarget as HTMLVideoElement).pause(); } catch {}
+      }}
+    />
   );
 }

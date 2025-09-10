@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Notice, TFile } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, normalizePath } from "obsidian";
 import { createRoot, type Root } from "react-dom/client";
 import type DanceRepoPlugin from "../main";
 import { scanDanceSteps, upsertSidecarMetadata } from "./repo";
@@ -27,6 +27,29 @@ export class DanceRepoView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
+    // Remove default view padding to pull header flush to the top
+    this.containerEl.addClass("dr-view");
+    // Ensure the content element has no padding/margins inline (overrides theme quirks)
+    (this.containerEl as HTMLElement).style.padding = "0";
+    (this.containerEl as HTMLElement).style.margin = "0";
+    // Compact the Obsidian view header for this leaf so our in-app header sits at the very top
+    const leafEl = this.containerEl.closest('.workspace-leaf') as HTMLElement | null;
+    if (leafEl) leafEl.classList.add('dr-compact-header');
+    // Fallback: directly mark the header element to collapse in case class scoping misses
+    const headerEl = this.containerEl.closest('.workspace-leaf-content')?.querySelector('.view-header') as HTMLElement | null;
+    if (headerEl) headerEl.setAttribute('data-dr-compact', '1');
+
+    // Defensive: remove any stray sibling .view-content elements that could push content down
+    const leafContent = this.containerEl.closest('.workspace-leaf-content');
+    if (leafContent) {
+      const siblings = Array.from(leafContent.querySelectorAll(':scope > .view-content')) as HTMLElement[];
+      for (const el of siblings) {
+        if (el !== this.containerEl && el.childElementCount === 0) {
+          // Only remove empty stray containers
+          el.remove();
+        }
+      }
+    }
     const host = this.containerEl.createDiv({ cls: "dd-react-host" });
     this.root = createRoot(host);
 
@@ -79,17 +102,85 @@ export class DanceRepoView extends ItemView {
       }
     };
 
+    const ensureFolder = async (folder: string) => {
+      const parts = folder.split("/").filter(Boolean);
+      let cur = "";
+      for (const p of parts) {
+        cur = cur ? `${cur}/${p}` : p;
+        const af = this.app.vault.getAbstractFileByPath(cur);
+        if (!af) {
+          try { await this.app.vault.createFolder(cur); } catch {}
+        }
+      }
+    };
+
+    const slug = (input?: string) => {
+      const s = (input ?? "").trim();
+      if (!s) return "";
+      return s
+        .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    };
+
+    const uniquePath = (full: string) => {
+      const ext = full.split(".").pop()!;
+      const base = full.slice(0, -(ext.length + 1));
+      if (!this.app.vault.getAbstractFileByPath(full)) return full;
+      let i = 2;
+      let candidate = `${base} ${i}.${ext}`;
+      while (this.app.vault.getAbstractFileByPath(candidate)) {
+        i++;
+        candidate = `${base} ${i}.${ext}`;
+      }
+      return candidate;
+    };
+
+    const importVideo = async (file: File) => {
+      // Decide destination folder: <libraryRoot>/Imported
+      const root = (this.plugin.settings.libraryRoot || "Dance").trim() || "Dance";
+      const destFolder = normalizePath(`${root}/Imported`);
+      await ensureFolder(destFolder);
+      const name = file.name;
+      const dot = name.lastIndexOf(".");
+      const ext = dot >= 0 ? name.slice(dot + 1) : "mp4";
+      const stem = dot >= 0 ? name.slice(0, dot) : name;
+      const safe = slug(stem) || `video-${Date.now()}`;
+      let destPath = normalizePath(`${destFolder}/${safe}.${ext}`);
+      destPath = uniquePath(destPath);
+      const buf = await file.arrayBuffer();
+      await this.app.vault.createBinary(destPath, buf);
+      // Minimal item; description/others can be added in the editor and saved to sidecar
+      const ds: DanceStepItem = {
+        path: destPath,
+        basename: safe,
+        ext,
+        name: stem,
+        description: "",
+        dance: undefined,
+        style: undefined,
+        classLevel: undefined,
+        thumbPath: undefined,
+      };
+      return ds;
+    };
+
     // 4) mount React app
     this.root.render(
       <ObsidianApp
         items={items}
         toUrl={toUrl}
-        actions={{ openPath, revealPath, copyPath, saveMeta }}
+        actions={{ openPath, revealPath, copyPath, saveMeta, importVideo }}
       />
     );
   }
 
   async onClose(): Promise<void> {
     this.root?.unmount();
+    const leafEl = this.containerEl.closest('.workspace-leaf') as HTMLElement | null;
+    if (leafEl) leafEl.classList.remove('dr-compact-header');
+    const headerEl = this.containerEl.closest('.workspace-leaf-content')?.querySelector('.view-header') as HTMLElement | null;
+    if (headerEl) headerEl.removeAttribute('data-dr-compact');
   }
 }

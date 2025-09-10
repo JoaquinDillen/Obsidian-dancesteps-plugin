@@ -128,20 +128,24 @@ export function FilterDrawer({ open, onOpenChange, filters, onFiltersChange, ste
             <div className="space-y-6 pr-4">
               {/* Sort Section */}
               <div className="p-4 rounded-2xl bg-card border">
-                <div className="flex items-center gap-2 mb-4">
-                  <ArrowUpDown className="w-4 h-4 text-primary" />
-                  <h3>Sort By</h3>
+                <div className="dr-filter-section-head">
+                  <div className="dr-filter-item-left">
+                    <ArrowUpDown className="w-4 h-4 text-primary" />
+                    <h3 className="dr-filter-title-strong">Sort By</h3>
+                  </div>
+                  <select
+                    className="dr-filter-select"
+                    value={filters.sort}
+                    onChange={(e) => onFiltersChange({ ...filters, sort: e.target.value as Filters["sort"] })}
+                  >
+                    <option value="az">A-Z</option>
+                    <option value="recent">Recently Added</option>
+                    <option value="mostPlayed">Most Played</option>
+                  </select>
                 </div>
-                <select
-                  className="border rounded-md h-9 px-3 w-full bg-background"
-                  value={filters.sort}
-                  onChange={(e) => onFiltersChange({ ...filters, sort: e.target.value as Filters["sort"] })}
-                >
-                  <option value="az">A-Z</option>
-                  <option value="recent">Recently Added</option>
-                  <option value="mostPlayed">Most Played</option>
-                </select>
               </div>
+              {/* Divider between sort and filters */}
+              <div className="dr-filter-divider" />
 
               {/* Classes Section */}
               {classes.length > 0 && (
@@ -215,7 +219,7 @@ export function FilterDrawer({ open, onOpenChange, filters, onFiltersChange, ste
 
               {/* Styles Section */}
               {styles.length > 0 && (
-                <div className="p-4 rounded-2xl bg-card border">
+                <div className="p-4 rounded-2xl bg-card border dr-filter-styles">
                   <div className="dr-filter-section-head">
                     <h3 className="dr-filter-title-strong">Styles</h3>
                     <div className="dr-filter-head-right">
@@ -244,7 +248,6 @@ export function FilterDrawer({ open, onOpenChange, filters, onFiltersChange, ste
                       );
                     })}
                   </div>
-                  <div className="dr-filter-sep" />
                 </div>
               )}
             </div>

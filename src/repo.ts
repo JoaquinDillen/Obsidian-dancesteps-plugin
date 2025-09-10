@@ -1,7 +1,7 @@
 import { Vault, TFile, parseYaml, normalizePath } from "obsidian";
 import type { DanceStepItem } from "./types";
 
-const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "m4v", "ogg"]);
+const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "m4v", "ogg", "avi"]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 
 function isVideo(file: TFile): boolean {

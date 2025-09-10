@@ -1,7 +1,7 @@
 import { App, Notice, TAbstractFile, TFile, normalizePath } from "obsidian";
 import type { DanceRepoSettings } from "./settings";
 
-export const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "m4v", "ogg"]);
+export const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "m4v", "ogg", "avi"]);
 
 // --- helpers --------------------------------------------------------------
 

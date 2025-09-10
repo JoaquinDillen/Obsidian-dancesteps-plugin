@@ -6,14 +6,13 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  ArrowLeft,
-  MoreVertical,
+  X as CloseIcon,
   Edit,
   Trash2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Slider } from "./ui/slider";
+// Replaced Radix Slider with native range for precise styling
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +32,7 @@ interface VideoViewerProps {
   onOpenPath: () => void;          // <— add
   onRevealPath: () => void;        // <— add
   onCopyPath: () => void;          // <— add
+  autoPlayInitial?: boolean;
 }
 
 
@@ -46,12 +46,18 @@ export function VideoViewer({
   onOpenPath,
   onRevealPath,
   onCopyPath,
+  autoPlayInitial,
 }: VideoViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [pendingAutoplay, setPendingAutoplay] = useState<boolean>(!!autoPlayInitial);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [rail, setRail] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  const railEl = useRef<HTMLDivElement>(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
 
   const currentIndex = allSteps.findIndex((s) => s.id === step.id);
 
@@ -87,12 +93,22 @@ export function VideoViewer({
     setIsMuted(video.muted);
   };
 
-  const handleTimeChange = (value: number[]) => {
+  const handleTimeChange = (newTime: number) => {
     const video = videoRef.current;
     if (!video) return;
-    const newTime = value[0];
     video.currentTime = newTime;
     setCurrentTime(newTime);
+  };
+
+  // Custom slider helpers
+  const setTimeFromClientX = (clientX: number) => {
+    const railDom = railEl.current;
+    const d = duration || 0;
+    if (!railDom || d <= 0) return;
+    const rect = railDom.getBoundingClientRect();
+    const rel = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const pct = rel / rect.width;
+    handleTimeChange(pct * d);
   };
 
   const formatTime = (time: number) => {
@@ -107,7 +123,16 @@ export function VideoViewer({
     if (!video) return;
 
     const handleTimeUpdate = () => setCurrentTime(video.currentTime);
-    const handleLoadedMetadata = () => setDuration(video.duration || 0);
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration || 0);
+      if (pendingAutoplay) {
+        // Attempt to play; if blocked, user can tap center button
+        video.play().catch(() => {});
+        setPendingAutoplay(false);
+      }
+      // compute rail after metadata (we know aspect)
+      computeRail();
+    };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => setIsPlaying(false);
@@ -127,6 +152,65 @@ export function VideoViewer({
     };
   }, []);
 
+  // Compute the visible video width within the stage and position rails accordingly
+  const computeRail = () => {
+    const st = stageRef.current;
+    const v = videoRef.current;
+    if (!st || !v) return;
+    const sw = st.clientWidth;
+    const sh = st.clientHeight;
+    const vw = v.videoWidth || 0;
+    const vh = v.videoHeight || 0;
+    if (!sw || !sh || !vw || !vh) {
+      setRail({ left: 0, width: sw });
+      return;
+    }
+    const aspect = vw / vh;
+    let dispW = sw;
+    let dispH = sw / aspect;
+    if (dispH > sh) {
+      dispH = sh;
+      dispW = sh * aspect;
+    }
+    const left = Math.max(0, Math.round((sw - dispW) / 2));
+    setRail({ left, width: Math.round(dispW) });
+  };
+
+  // Recompute on resize and when stage size changes
+  useEffect(() => {
+    computeRail();
+    const ro = new (window as any).ResizeObserver?.(() => computeRail());
+    if (ro && stageRef.current) ro.observe(stageRef.current);
+    const onResize = () => computeRail();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (ro && stageRef.current) ro.unobserve(stageRef.current);
+    };
+  }, []);
+
+  // Drag listeners for custom slider
+  useEffect(() => {
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!isScrubbing) return;
+      const x = (e as TouchEvent).touches && (e as TouchEvent).touches.length
+        ? (e as TouchEvent).touches[0].clientX
+        : (e as MouseEvent).clientX;
+      setTimeFromClientX(x);
+    };
+    const onUp = () => setIsScrubbing(false);
+    window.addEventListener('mousemove', onMove as any);
+    window.addEventListener('touchmove', onMove as any, { passive: false } as any);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove as any);
+      window.removeEventListener('touchmove', onMove as any as any);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [isScrubbing, duration]);
+
   // Reset video when step changes
   useEffect(() => {
     const video = videoRef.current;
@@ -136,52 +220,20 @@ export function VideoViewer({
     setCurrentTime(0);
     setIsPlaying(false);
     // duration will refresh when new metadata loads
+    if (autoPlayInitial) {
+      setPendingAutoplay(true);
+    }
   }, [step.id]);
 
   return (
-    <div className="h-full flex flex-col bg-background" ref={swipeRef}>
-      {/* Header */}
-      <div className="flex items-center p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={onBack} className="mr-3">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-
-        <div className="flex-1 flex items-center gap-3">
-          <h1 className="truncate">{step.stepName}</h1>
-          <Badge variant="secondary" className="text-xs">
-            {currentIndex + 1} / {allSteps.length}
-          </Badge>
-        </div>
-
-        {/* Options Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center transition-colors">
-            <MoreVertical className="w-4 h-4" />
-          </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={onOpenPath}>Open file in Obsidian</DropdownMenuItem>
-              <DropdownMenuItem onClick={onRevealPath}>Reveal in vault</DropdownMenuItem>
-              <DropdownMenuItem onClick={onCopyPath}>Copy path</DropdownMenuItem>
-              <div className="my-1 h-px bg-border" />
-              <DropdownMenuItem onClick={() => onEditStep(step)}>
-                <Edit className="w-4 h-4 mr-2" /> Edit Step
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDeleteStep(step.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Step
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Video Container */}
-      <div className="flex-1 relative bg-black">
+    <div className="dr-vv-root" ref={swipeRef}>
+      {/* Video Container (fullscreen) */}
+      <div className="dr-vv-stage" ref={stageRef}>
+        <div ref={swipeRef} className="absolute inset-0" />
         {/* Real video element (plays vault file) */}
         <video
           ref={videoRef}
-          className="w-full h-full object-contain bg-black"
+          className="dr-vv-video"
           src={step.videoImport}          // vault URL (from adapter)
           poster={step.thumbnail || undefined}
           muted={isMuted}
@@ -189,139 +241,134 @@ export function VideoViewer({
           preload="metadata"
         />
 
-        {/* Navigation arrows */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 backdrop-blur-sm hover:bg-black/40 text-white"
-          onClick={goToPrevious}
-          disabled={currentIndex === 0}
-          aria-label="Previous"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 backdrop-blur-sm hover:bg-black/40 text-white"
-          onClick={goToNext}
-          disabled={currentIndex === allSteps.length - 1}
-          aria-label="Next"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-
-        {/* Bottom overlay with step info */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/75 to-transparent">
-          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-            <h2 className="text-xl mb-2">{step.stepName}</h2>
-            {step.description && (
-              <p className="text-sm text-white/90 mb-3 line-clamp-2">
-                {step.description}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {step.class && (
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  {step.class}
-                </Badge>
-              )}
-              {step.dance && (
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  {step.dance}
-                </Badge>
-              )}
-              {step.style && (
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
-                >
-                  {step.style}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Center play/pause button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <Button
-            size="lg"
-            className="pointer-events-auto rounded-full w-16 h-16 bg-white/20 backdrop-blur-sm hover:bg-white/30"
-            onClick={togglePlay}
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+        {/* Top overlay: Back + Menu */}
+        <div className="dr-vv-top" style={{ left: rail.left, right: 'auto', width: rail.width }}>
+          <div className="flex-1" />
+          <Button variant="ghost" size="icon" onClick={onBack} className="dr-vv-close-btn">
+            <CloseIcon className="dr-vv-close-icon" strokeWidth={3} />
           </Button>
         </div>
-      </div>
 
-      {/* Video Controls */}
-      <div className="p-4 bg-card border-t">
-        {/* Progress bar */}
-        <div className="mb-4">
-          <Slider
-            value={[Math.min(currentTime, duration || 0)]}
-            max={duration || step.duration || 0}
-            step={0.1}
-            onValueChange={handleTimeChange}
-            className="w-full"
-            aria-label="Seek"
-          />
-          <div className="flex justify-between text-sm text-muted-foreground mt-1">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration || step.duration || 0)}</span>
+        {/* Middle navigation arrows removed per design; swipe still works */}
+
+        {/* Info overlay (only when paused) */}
+        {!isPlaying && (
+          <div
+            className="dr-vv-info pointer-events-none"
+            style={{ left: rail.left, right: 'auto', width: rail.width, bottom: 150 }}
+          >
+            <div className="dr-vv-info-inner">
+              <h2 className="dr-vv-title">{step.stepName}</h2>
+              {step.description && (
+                <p className="dr-vv-desc line-clamp-3">
+                  {step.description}
+                </p>
+              )}
+              <div className="dr-vv-tags">
+                {step.class && (
+                  <Badge variant="secondary" className="dr-vv-badge">
+                    {step.class}
+                  </Badge>
+                )}
+                {step.dance && (
+                  <Badge variant="secondary" className="dr-vv-badge">
+                    {step.dance}
+                  </Badge>
+                )}
+                {step.style && (
+                  <Badge variant="secondary" className="dr-vv-badge">
+                    {step.style}
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Control buttons */}
-        <div className="flex items-center justify-center space-x-4">
+      {/* Bottom controls row: prev / play-pause / next / mute */}
+      <div
+        className="dr-vv-controls"
+        style={{ left: rail.left, width: rail.width }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => { e.stopPropagation(); }}
+      >
           <Button
             variant="ghost"
             size="icon"
+            className="dr-ctrl-btn"
             onClick={goToPrevious}
             disabled={currentIndex === 0}
             aria-label="Previous"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="dr-ctrl-icon" />
           </Button>
-
           <Button
             size="lg"
+            className="dr-ctrl-btn rounded-full w-12 h-12"
             onClick={togglePlay}
-            className="rounded-full w-12 h-12"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            {isPlaying ? <Pause className="dr-ctrl-icon" /> : <Play className="dr-ctrl-icon" />}
           </Button>
-
           <Button
             variant="ghost"
             size="icon"
+            className="dr-ctrl-btn"
             onClick={goToNext}
             disabled={currentIndex === allSteps.length - 1}
             aria-label="Next"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="dr-ctrl-icon" />
           </Button>
-
           <Button
             variant="ghost"
             size="icon"
+            className="dr-ctrl-btn"
             onClick={toggleMute}
             aria-label={isMuted ? "Unmute" : "Mute"}
           >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            {isMuted ? <VolumeX className="dr-ctrl-icon" /> : <Volume2 className="dr-ctrl-icon" />}
           </Button>
+      </div>
+
+      {/* Bottom edge gradient (always from screen bottom) */}
+      <div className="dr-vv-bottom-fade" />
+
+      {/* Bottom controls overlay: progress + times (interactive) */}
+      <div
+        className="dr-vv-progress"
+        style={{ left: rail.left, width: rail.width }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => { e.stopPropagation(); }}
+      >
+        <div>
+          <div className="dr-vv-times">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration || step.duration || 0)}</span>
+          </div>
+          {/* Custom slider: black rail, white progress, white circular knob */}
+          <div
+            ref={railEl}
+            className="dr-vv-rail"
+            onPointerDown={(e) => { setIsScrubbing(true); setTimeFromClientX(e.clientX); }}
+            onMouseDown={(e) => { setIsScrubbing(true); setTimeFromClientX(e.clientX); }}
+            onTouchStart={(e) => { setIsScrubbing(true); setTimeFromClientX((e.touches?.[0]?.clientX) || 0); }}
+            style={{ position: 'relative', height: 16, borderRadius: 999, background: '#000' }}
+            aria-label="Seek"
+          >
+            {/* Progress */}
+            <div
+              style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(duration ? (currentTime / duration) : 0) * 100}%`, background: '#fff', borderRadius: 999 }}
+            />
+            {/* Thumb */}
+            <div
+              style={{ position: 'absolute', top: '50%', left: `${(duration ? (currentTime / duration) : 0) * 100}%`, transform: 'translate(-50%, -50%)', width: 28, height: 28, borderRadius: '50%', background: '#fff', border: '2px solid #fff', boxShadow: '0 0 0 2px rgba(0,0,0,0.25)', pointerEvents: 'none' }}
+            />
+          </div>
         </div>
       </div>
+      </div>
+      {/* Floating small controls can go here if needed */}
     </div>
   );
 }

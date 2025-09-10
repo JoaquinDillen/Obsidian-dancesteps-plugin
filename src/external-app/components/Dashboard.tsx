@@ -8,6 +8,8 @@ import { filterAndSortSteps, getUniqueValues } from "../data/mockData";
 import { GridLibrary } from "./GridLibrary";
 import { FilterDrawer } from "./FilterDrawer";
 import { StepForm } from "./StepForm";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import { VideoViewer } from "./VideoViewer";
 
 interface DashboardProps {
   steps: StepItem[];
@@ -16,18 +18,35 @@ interface DashboardProps {
   onEditStep: (step: StepItem) => void;
   onDeleteStep: (stepId: string) => void;
   onSaveEdit?: (originalId: string, updated: StepItem) => Promise<void> | void;
+  externalEdit?: { step: StepItem; token: number } | null;
 }
 
-export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDeleteStep, onSaveEdit }: DashboardProps) {
+export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDeleteStep, onSaveEdit, externalEdit }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [localSteps, setLocalSteps] = useState<StepItem[]>(steps);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStep, setEditingStep] = useState<StepItem | null>(null);
+  const [viewerStep, setViewerStep] = useState<StepItem | null>(null);
 
   useEffect(() => {
     setLocalSteps(steps);
   }, [steps]);
+
+  
+
+  // If parent requests to open editor for a specific step (e.g., just imported), do it
+  useEffect(() => {
+    if (externalEdit?.step) {
+      setEditingStep(externalEdit.step);
+      setIsFormOpen(true);
+      // optionally ensure the step exists in local list
+      setLocalSteps(prev => {
+        if (prev.some(s => s.id === externalEdit.step.id)) return prev;
+        return [...prev, externalEdit.step];
+      });
+    }
+  }, [externalEdit?.token]);
 
   const [filters, setFilters] = useState<Filters>({
     classes: [],
@@ -69,7 +88,15 @@ export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDelete
       playCount: data.playCount,
       lastPlayedAt: data.lastPlayedAt,
     };
-    setLocalSteps(prev => prev.map(s => s.id === editingStep.id ? updated : s));
+    setLocalSteps(prev => {
+      const idx = prev.findIndex(s => s.id === editingStep.id);
+      if (idx >= 0) {
+        const next = prev.slice();
+        next[idx] = updated;
+        return next;
+      }
+      return [...prev, updated];
+    });
     await onSaveEdit?.(editingStep.id, updated);
     onEditStep?.(updated);
   };
@@ -78,6 +105,17 @@ export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDelete
     setLocalSteps(prev => prev.filter(s => s.id !== stepId));
     onDeleteStep?.(stepId);
   };
+
+  const [viewerAutoPlay, setViewerAutoPlay] = useState(false);
+  const openViewer = (step: StepItem) => {
+    // Increment local play count when the user taps play on a card
+    setLocalSteps(prev => prev.map(s => s.id === step.id ? { ...s, playCount: (s.playCount || 0) + 1 } : s));
+    const bumped = { ...step, playCount: (step.playCount || 0) + 1 } as StepItem;
+    setViewerAutoPlay(true);
+    setViewerStep(bumped);
+  };
+  const closeViewer = () => setViewerStep(null);
+  const handleViewerChange = (step: StepItem) => setViewerStep(step);
 
   return (
     <div className="dr-dashboard">
@@ -147,6 +185,7 @@ export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDelete
           onStepSelect={onStepSelect}
           onEditStep={handleOpenEdit}
           onDeleteStep={handleDelete}
+          onPlayFull={openViewer}
         />
       </div>
 
@@ -167,6 +206,27 @@ export function Dashboard({ steps, onStepSelect, onAddStep, onEditStep, onDelete
         editingStep={editingStep || undefined}
         suggestions={getUniqueValues(localSteps)}
       />
+
+      {/* Fullscreen viewer */}
+      <Dialog open={!!viewerStep} onOpenChange={(open: boolean) => { if (!open) closeViewer(); }}>
+        <DialogContent className="dr-fullscreen-dialog" aria-describedby={undefined}>
+          <DialogTitle style={{position:"absolute",width:1,height:1,margin:-1,clip:"rect(0 0 0 0)",overflow:"hidden"}}>Video viewer</DialogTitle>
+          {viewerStep && (
+            <VideoViewer
+              step={viewerStep}
+              allSteps={filteredSteps}
+              onBack={closeViewer}
+              onStepChange={handleViewerChange}
+              onEditStep={handleOpenEdit}
+              onDeleteStep={(id) => { handleDelete(id); closeViewer(); }}
+              onOpenPath={() => {}}
+              onRevealPath={() => {}}
+              onCopyPath={() => {}}
+              autoPlayInitial={viewerAutoPlay}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
