@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { StepItem } from "../types/dance";
-import { useSwipeGesture } from "../hooks/useSwipeGesture";
 
 interface VideoViewerProps {
   step: StepItem;
@@ -73,10 +72,6 @@ export function VideoViewer({
     }
   };
 
-  const swipeRef = useSwipeGesture({
-    onSwipeLeft: goToNext,
-    onSwipeRight: goToPrevious,
-  });
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -226,10 +221,9 @@ export function VideoViewer({
   }, [step.id]);
 
   return (
-    <div className="dr-vv-root" ref={swipeRef}>
+    <div className="dr-vv-root">
       {/* Video Container (fullscreen) */}
       <div className="dr-vv-stage" ref={stageRef}>
-        <div ref={swipeRef} className="absolute inset-0" />
         {/* Real video element (plays vault file) */}
         <video
           ref={videoRef}

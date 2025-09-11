@@ -166,12 +166,33 @@ export class DanceRepoView extends ItemView {
       return ds;
     };
 
+    const deletePath = async (p: string) => {
+      try {
+        const af = this.app.vault.getAbstractFileByPath(p);
+        if (af instanceof TFile) {
+          // delete sidecar md first if present
+          const mdPath = normalizePath(`${af.parent?.path ?? ""}/${af.basename}.md`);
+          const md = this.app.vault.getAbstractFileByPath(mdPath);
+          if (md instanceof TFile) {
+            await this.app.vault.delete(md);
+          }
+          await this.app.vault.delete(af);
+          new Notice("Step deleted");
+        } else {
+          new Notice("File not found: " + p);
+        }
+      } catch (e) {
+        console.error(e);
+        new Notice("Failed to delete step");
+      }
+    };
+
     // 4) mount React app
     this.root.render(
       <ObsidianApp
         items={items}
         toUrl={toUrl}
-        actions={{ openPath, revealPath, copyPath, saveMeta, importVideo }}
+        actions={{ openPath, revealPath, copyPath, saveMeta, importVideo, deletePath }}
       />
     );
   }

@@ -13,6 +13,7 @@ type Props = {
     copyPath: (p: string) => Promise<void>;
     saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string }>) => Promise<void>;
     importVideo?: (file: File) => Promise<DanceStepItem>;
+    deletePath?: (p: string) => Promise<void>;
   };
 };
 
@@ -91,7 +92,7 @@ export default function ObsidianApp({ items, toUrl, actions }: Props) {
       onEditStep={async (step) => {
         // no-op here; Dashboard handles local state
       }}
-      onDeleteStep={() => {}}
+      onDeleteStep={async (id) => { await actions?.deletePath?.(id); }}
       onSaveEdit={async (originalId, updated) => {
         // Persist via sidecar metadata
         await actions?.saveMeta?.(originalId, {
