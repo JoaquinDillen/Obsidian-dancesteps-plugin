@@ -1,3 +1,10 @@
+/**
+ * VideoViewer component
+ *
+ * Fullscreen viewer for a step's video with playback controls, navigation
+ * between steps, and quick actions. Uses a custom progress rail sized to the
+ * video's displayed dimensions for accurate scrubbing.
+ */
 import { useState, useRef, useEffect } from "react";
 import {
   ChevronLeft,
@@ -21,6 +28,7 @@ import {
 } from "./ui/dropdown-menu";
 import { StepItem } from "../types/dance";
 
+/** Props for the VideoViewer component. */
 interface VideoViewerProps {
   step: StepItem;
   allSteps: StepItem[];

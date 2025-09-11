@@ -124,3 +124,10 @@ export async function organizeVideoFile(app: App, file: TFile, settings: DanceRe
 
   new Notice(`Organized: ${destPath}`);
 }
+/**
+ * File organization helpers
+ *
+ * Responsible for mapping imported videos to vault paths using user templates
+ * (library root, folder template, filename template) and performing copy/move
+ * operations via the Obsidian file API.
+ */

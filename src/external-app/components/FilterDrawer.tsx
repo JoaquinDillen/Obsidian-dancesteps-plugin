@@ -1,3 +1,12 @@
+/**
+ * FilterDrawer component
+ *
+ * Bottom sheet housing filter and sort controls for the steps grid.
+ * Lets users toggle classes, dances, styles, and adjust sort order.
+ *
+ * Designed to be controlled by the parent via `open`/`onOpenChange` and
+ * to emit a complete Filters object through `onFiltersChange`.
+ */
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
@@ -9,6 +18,7 @@ import { SlidersHorizontal, X, ArrowUpDown, Filter as FilterIcon } from "lucide-
 import { Filters, StepItem } from "../types/dance";
 import { getUniqueValues } from "../data/mockData";
 
+/** Props for the FilterDrawer */
 interface FilterDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

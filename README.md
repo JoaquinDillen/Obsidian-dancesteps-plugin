@@ -1,94 +1,93 @@
-# Obsidian Sample Plugin
+# Dance Repository (Obsidian Plugin)
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Browse and organize your dance practice videos inside Obsidian. Dance Repository adds a dedicated “Dance Library” view with a fast, phone‑style grid, powerful search and filters, and a fullscreen viewer. Edit step metadata and (optionally) auto‑organize new videos into a clean folder structure.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- Library view with search, filters, and sort (by class, dance, style)
+- Responsive grid of video cards with quick actions (play, edit, delete)
+- Fullscreen video viewer with scrubbing, previous/next navigation, and mute
+- Edit step metadata; persisted in sidecar Markdown frontmatter next to videos
+- Import new videos from a file picker (saved into your vault)
+- Optional auto‑organize of new videos into a template‑based folder structure
+- Ribbon icon and command to open the library quickly
 
-## First time developing plugins?
+## Installation
 
-Quick starting guide for new plugin devs:
+Manual (development/testing):
+- Build the plugin or download a packaged release.
+- Copy these files into your vault at `Vault/.obsidian/plugins/obsidian-danap-plugin/`:
+  - `manifest.json`
+  - `main.js`
+  - `styles.css` (if present)
+- In Obsidian, go to **Settings → Community plugins** and enable “Dance Repository”.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+BRAT (optional):
+- Install the [Obsidian BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin.
+- Add this repository to BRAT to install pre‑release builds.
 
-## Releasing new releases
+## Usage
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+- Open the library:
+  - Click the ribbon icon (play circle), or
+  - Run the command: “Open Dance Repository”.
+- Use the search box and filter drawer to narrow steps by class, dance, or style.
+- Click a card to select, or use the play button to open the fullscreen viewer.
+- Edit a step via the ••• menu → Edit. Changes are saved to a sidecar `.md` file next to the video.
+- Import videos using the “Add Step” button (file picker). The file is copied into your vault (see settings for destination/organization).
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Settings
 
-## Adding your plugin to the community plugin list
+- Root folder: Restrict scanning to this folder (blank = whole vault)
+- Autoplay, Show controls: Default video behavior in the viewer
+- Library root: Top‑level destination for organized videos (e.g., `Dance/`)
+- Folder template: Subfolders under the library root (placeholders: `{dance}`, `{style}`, `{class}`)
+- Filename template: Base filename for organized videos (placeholder: `{stepName}`)
+- Auto‑organize new videos: When enabled, new videos are automatically copied/renamed under the library root using your templates
+- Default filters: Optional comma‑separated defaults for classes, dances, and styles used by the library view
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Commands
 
-## How to use
+- `open-dance-repository` — Open Dance Repository (also available via ribbon icon)
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Compatibility
 
-## Manually installing the plugin
+- Requires Obsidian `minAppVersion` specified in `manifest.json`.
+- Designed to work on desktop and mobile (`isDesktopOnly: false`).
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+## Privacy & Security
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+- The plugin operates locally and does not send your data to any external service.
+- No telemetry. Any future optional integrations will be opt‑in and documented.
+- Scope is limited to your vault; the plugin does not access files outside the vault.
 
-## Funding URL
+## Development
 
-You can include funding URLs where people who use your plugin can financially support it.
+Prerequisites:
+- Node.js 18+ (LTS recommended)
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+Install and run:
+- `npm install`
+- `npm run dev` — development watch build
+- `npm run build` — production build (bundles to `main.js`)
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+Project notes:
+- TypeScript + esbuild bundle. Source lives under `src/`.
+- Entry point is `main.ts` which loads the custom view defined in `src/view.tsx`.
+- Release artifacts must include `manifest.json`, `main.js`, and optional `styles.css` at the plugin root.
 
-If you have multiple URLs, you can also do:
+## Releasing
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+1) Bump the version in `manifest.json` (SemVer). Update `versions.json` to map plugin version → minimum Obsidian version.
+2) Create a GitHub release with a tag exactly matching `manifest.json` (no leading `v`).
+3) Attach `manifest.json`, `main.js`, and `styles.css` (if present) as assets.
 
-## API Documentation
+Tip: You can also use `npm version patch|minor|major` and then update `minAppVersion` as needed.
 
-See https://github.com/obsidianmd/obsidian-api
+## Known Limitations
+
+- Some platforms may not render a video frame thumbnail until playback starts. The grid falls back to an inline video preview when a still cannot be captured.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.

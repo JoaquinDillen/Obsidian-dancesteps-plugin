@@ -3,6 +3,7 @@ import { Dashboard } from "./external-app/components/Dashboard";
 import type { StepItem as AppStep } from "./external-app/types/dance";
 import type { DanceStepItem } from "./types";
 import { LibraryModal } from "./ui/libraryModal";
+import { TourOverlay } from "./external-app/components/TourOverlay";
 
 type Props = {
   items: DanceStepItem[];
@@ -15,13 +16,16 @@ type Props = {
     importVideo?: (file: File) => Promise<DanceStepItem>;
     deletePath?: (p: string) => Promise<void>;
   };
+  onboardingNeeded?: boolean;
+  onOnboardingComplete?: () => Promise<void> | void;
 };
 
-export default function ObsidianApp({ items, toUrl, actions }: Props) {
+export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, onOnboardingComplete }: Props) {
   // Local state for steps so we can append newly imported videos without a full rescan
   const [allSteps, setAllSteps] = useState<AppStep[]>([]);
   const [externalEdit, setExternalEdit] = useState<{ step: AppStep; token: number } | null>(null);
   const tokenRef = useRef(0);
+  const [showTour, setShowTour] = useState<boolean>(!!onboardingNeeded);
 
   // Initialize/refresh from props
   useEffect(() => {
@@ -82,28 +86,44 @@ export default function ObsidianApp({ items, toUrl, actions }: Props) {
   };
 
   return (
-    <Dashboard
-      steps={allSteps}
-      onStepSelect={(step) => {
-        // Placeholder for viewer routing
-        console.log("Selected:", step.id);
-      }}
-      onAddStep={handleAddStep}
-      onEditStep={async (step) => {
-        // no-op here; Dashboard handles local state
-      }}
-      onDeleteStep={async (id) => { await actions?.deletePath?.(id); }}
-      onSaveEdit={async (originalId, updated) => {
-        // Persist via sidecar metadata
-        await actions?.saveMeta?.(originalId, {
-          stepName: updated.stepName,
-          description: updated.description,
-          dance: updated.dance,
-          style: updated.style,
-          class: updated.class,
-        });
-      }}
-      externalEdit={externalEdit}
-    />
+    <>
+      <Dashboard
+        steps={allSteps}
+        onStepSelect={(step) => {
+          // Placeholder for viewer routing
+          console.log("Selected:", step.id);
+        }}
+        onAddStep={handleAddStep}
+        onEditStep={async (step) => {
+          // no-op here; Dashboard handles local state
+        }}
+        onDeleteStep={async (id) => { await actions?.deletePath?.(id); }}
+        onSaveEdit={async (originalId, updated) => {
+          // Persist via sidecar metadata
+          await actions?.saveMeta?.(originalId, {
+            stepName: updated.stepName,
+            description: updated.description,
+            dance: updated.dance,
+            style: updated.style,
+            class: updated.class,
+          });
+        }}
+        externalEdit={externalEdit}
+      />
+      {showTour && (
+        <TourOverlay
+          steps={[
+            { id: 'header', title: 'Dance Library', body: 'This is your library overview. Use the Add Step button to import a new video into your vault.' },
+            { id: 'search', title: 'Search', body: 'Quickly find steps by name or description.' },
+            { id: 'filters', title: 'Filters & Sort', body: 'Filter by class, dance, and style; adjust sort order.' },
+            { id: 'grid', title: 'Steps Grid', body: 'Tap a card to select, use ••• for edit or delete, or the play icon for fullscreen.' },
+          ]}
+          onClose={async () => {
+            setShowTour(false);
+            await onOnboardingComplete?.();
+          }}
+        />
+      )}
+    </>
   );
 }

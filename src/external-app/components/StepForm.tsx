@@ -1,3 +1,10 @@
+/**
+ * StepForm component
+ *
+ * Dialog form used to create or edit a dance step. Provides text inputs,
+ * select fields with suggestions, and basic validation. Emits an object
+ * compatible with StepItem (minus id/addedAt) on save.
+ */
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -9,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDe
 import { StepItem } from "../types/dance";
 import { X } from "lucide-react";
 
+/** Props for the StepForm dialog. */
 interface StepFormProps {
   isOpen: boolean;
   onClose: () => void;

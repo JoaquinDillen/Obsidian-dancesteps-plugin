@@ -188,11 +188,21 @@ export class DanceRepoView extends ItemView {
     };
 
     // 4) mount React app
+    const onboardingNeeded = !this.plugin.settings.onboardingSeen;
+    const markOnboardingSeen = async () => {
+      if (!this.plugin.settings.onboardingSeen) {
+        this.plugin.settings.onboardingSeen = true;
+        await this.plugin.saveSettings();
+      }
+    };
+
     this.root.render(
       <ObsidianApp
         items={items}
         toUrl={toUrl}
         actions={{ openPath, revealPath, copyPath, saveMeta, importVideo, deletePath }}
+        onboardingNeeded={onboardingNeeded}
+        onOnboardingComplete={markOnboardingSeen}
       />
     );
   }
@@ -205,3 +215,9 @@ export class DanceRepoView extends ItemView {
     if (headerEl) headerEl.removeAttribute('data-dr-compact');
   }
 }
+/**
+ * Custom workspace view wrapping the external React app.
+ *
+ * Hosts the plugin UI inside an Obsidian WorkspaceLeaf and wires lifecycle
+ * methods so the view cleans up correctly when detached.
+ */

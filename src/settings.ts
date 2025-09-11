@@ -1,7 +1,14 @@
+/**
+ * Plugin settings: schema, defaults, and settings tab UI.
+ *
+ * Provides a declarative, self-contained settings editor and an interface
+ * `DanceRepoSettings` with sane defaults in `DEFAULT_SETTINGS`.
+ */
 import { App, PluginSettingTab, Setting } from "obsidian";
 import { scanDanceSteps } from "./repo";
 import type DanceRepoPlugin from "../main";
 
+/** Configuration saved with the plugin. */
 export interface DanceRepoSettings {
   rootFolder: string; // where to scan for videos; empty to scan whole vault
   autoplay: boolean;
@@ -14,6 +21,8 @@ export interface DanceRepoSettings {
   defaultFilterClasses: string;   // comma-separated list of class names/levels to include by default
   defaultFilterDances: string;    // comma-separated list of dance types to include by default
   defaultFilterStyles: string;    // comma-separated list of styles/variants to include by default
+  // Onboarding
+  onboardingSeen: boolean;        // whether the welcome tour has been shown
 }
 
 export const DEFAULT_SETTINGS: DanceRepoSettings = {
@@ -27,6 +36,7 @@ export const DEFAULT_SETTINGS: DanceRepoSettings = {
   defaultFilterClasses: "",
   defaultFilterDances: "", // e.g., "Salsa,Bachata"
   defaultFilterStyles: "", // e.g., "On1,Sensual"
+  onboardingSeen: false,
 };
 
 export class DanceRepoSettingTab extends PluginSettingTab {
@@ -192,6 +202,20 @@ export class DanceRepoSettingTab extends PluginSettingTab {
       renderClassChips();
       populateClassOptions();
     };
+
+    // Onboarding section
+    containerEl.createEl("h4", { text: "Onboarding" });
+    new Setting(containerEl)
+      .setName("Welcome tour")
+      .setDesc("Show the first-time tour the next time you open the Dance Library view.")
+      .addButton(btn => btn
+        .setButtonText("Show again")
+        .onClick(async () => {
+          this.plugin.settings.onboardingSeen = false;
+          await this.plugin.saveSettings();
+          new (window as any).Notice?.("Welcome tour will show next time")
+        })
+      );
 
     // Dance types row: chips + dropdown + tools
     const danceSetting = new Setting(containerEl)

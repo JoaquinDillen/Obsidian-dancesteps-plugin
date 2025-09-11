@@ -1,3 +1,13 @@
+/**
+ * GridLibrary component
+ *
+ * Renders the list of steps as a responsive grid of cards with:
+ * - Thumbnail (image or generated video frame)
+ * - Quick actions (play fullscreen, edit, delete)
+ * - Step metadata (name, tags, play count)
+ *
+ * Keeps logic simple and delegates most behavior to parent callbacks.
+ */
 import React, { useEffect, useRef, useState } from "react";
 import { StepItem } from "../types/dance";
 import { Badge } from "./ui/badge";
@@ -7,6 +17,7 @@ import { Play, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
+/** Props for the GridLibrary component. */
 interface GridLibraryProps {
   steps: StepItem[];
   onStepSelect: (step: StepItem) => void;
@@ -15,6 +26,9 @@ interface GridLibraryProps {
   onPlayFull?: (step: StepItem) => void;
 }
 
+/**
+ * Displays a grid of step cards and wires up interactions to callbacks.
+ */
 export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onPlayFull }: GridLibraryProps) {
   if (steps.length === 0) {
     return (
@@ -56,7 +70,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                       e.stopPropagation();
                     }}
                   >
-                    <MoreVertical className="dr-card-menu-icon" />
+                    <MoreVertical className="dr-card-menu-icon" aria-hidden="true" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
@@ -65,7 +79,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                         onEditStep(step);
                       }}
                     >
-                      <Edit style={{ width: 12, height: 12, marginRight: 6 }} />
+                      <Edit style={{ width: 12, height: 12, marginRight: 6 }} aria-hidden="true" />
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -74,7 +88,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                         onDeleteStep(step.id);
                       }}
                     >
-                      <Trash2 style={{ width: 12, height: 12, marginRight: 6 }} />
+                      <Trash2 style={{ width: 12, height: 12, marginRight: 6 }} aria-hidden="true" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -88,7 +102,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                     onClick={(e) => { e.stopPropagation(); onPlayFull?.(step); }}
                     aria-label="Play fullscreen"
                   >
-                    <Play style={{ width: 16, height: 16, color: '#fff' }} />
+                    <Play style={{ width: 16, height: 16, color: '#fff' }} aria-hidden="true" />
                   </button>
                 </div>
 
@@ -125,6 +139,13 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
   );
 }
 
+/**
+ * VideoThumb
+ *
+ * Lightweight thumbnail generator for a video source. Attempts to draw
+ * the first frame to a canvas and uses that as an <img> for performance.
+ * Falls back to a short inline <video> preview when capture fails.
+ */
 function VideoThumb({ src, alt }: { src: string; alt?: string }) {
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
   const triedRef = useRef(false);
