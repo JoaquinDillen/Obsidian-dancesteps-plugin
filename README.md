@@ -27,7 +27,7 @@ Browse and organize your dance practice videos inside Obsidian. Dance Repository
 
 Manual (development/testing):
 - Build the plugin or download a packaged release.
-- Copy these files into your vault at `Vault/.obsidian/plugins/obsidian-dancesteps-plugin/`:
+- Copy these files into your vault at `Vault/.obsidian/plugins/dancesteps/`:
   - `manifest.json`
   - `main.js`
   - `styles.css` (if present)
