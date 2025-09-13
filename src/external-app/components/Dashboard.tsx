@@ -191,7 +191,9 @@ export function Dashboard({
         s.id === step.id ? { ...s, playCount: (s.playCount ?? 0) + 1 } : s
       )
     );
-    const bumped = { ...step, playCount: (step.playCount ?? 0) + 1 } as StepItem;
+    const bumped = { ...step, playCount: (step.playCount ?? 0) + 1, lastPlayedAt: Date.now() } as StepItem;
+    // Persist play count immediately so it survives reloads
+    onSaveEdit?.(step.id, bumped);
     setViewerAutoPlay(true);
     setViewerStep(bumped);
   };

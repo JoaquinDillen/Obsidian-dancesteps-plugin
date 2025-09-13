@@ -90,6 +90,8 @@ class VideoImportModal extends Modal {
 
       // 2) write a sidecar .md with your metadata so organizer can use it
       const mdPath = tempPath.replace(new RegExp(`\\.${ext}$`), ".md");
+      const normalizeTag = (s: string) => (s || "").trim().replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const danceTag = normalizeTag(this.dance);
       const fm = [
         "---",
         `stepName: ${this.stepName || file.name.replace(/\.[^.]+$/, "")}`,
@@ -97,9 +99,13 @@ class VideoImportModal extends Modal {
         `class: ${this.classLevel || ""}`,
         `dance: ${this.dance || ""}`,
         `style: ${this.style || ""}`,
+        `playCount: 0`,
+        `lastPlayedAt:`,
         "thumbnail:",
         "duration:",
         "---",
+        "",
+        `#DanceLibrary${danceTag ? ` #${danceTag}` : ""}`,
         "",
       ].join("\n");
       await this.app.vault.create(mdPath, fm);

@@ -107,6 +107,8 @@ export async function organizeVideoFile(app: App, file: TFile, settings: DanceRe
   // create a sidecar MD with frontmatter (if not already present)
   const destMd = destPath.replace(new RegExp(`\\.${ext}$`), ".md");
   if (!app.vault.getAbstractFileByPath(destMd)) {
+    const normTag = (s: string) => (s || "").trim().replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const danceTag = normTag(meta.dance ?? "");
     const fm = [
       "---",
       `stepName: ${meta.stepName ?? file.basename}`,
@@ -114,9 +116,13 @@ export async function organizeVideoFile(app: App, file: TFile, settings: DanceRe
       `class: ${meta.class ?? ""}`,
       `dance: ${meta.dance ?? ""}`,
       `style: ${meta.style ?? ""}`,
+      `playCount: 0`,
+      `lastPlayedAt:`,
       "thumbnail:",
       "duration:",
       "---",
+      "",
+      `#DanceLibrary${danceTag ? ` #${danceTag}` : ""}`,
       "",
     ].join("\n");
     await app.vault.create(destMd, fm);

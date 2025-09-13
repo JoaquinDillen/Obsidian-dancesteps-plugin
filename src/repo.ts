@@ -105,6 +105,13 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
       if (typeof fm.classLevel === "string" && fm.classLevel.trim()) classLevel = fm.classLevel.trim();
     }
 
+    const playCount = typeof (fm as any)?.playCount === "number" && isFinite((fm as any).playCount)
+      ? Math.max(0, Math.floor((fm as any).playCount))
+      : undefined;
+    const lastPlayedAt = typeof (fm as any)?.lastPlayedAt === "number" && isFinite((fm as any).lastPlayedAt)
+      ? (fm as any).lastPlayedAt
+      : undefined;
+
     items.push({
       path: f.path,
       basename: f.basename,
@@ -115,6 +122,8 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
       style,
       classLevel,
       thumbPath: thumb?.path,
+      playCount,
+      lastPlayedAt,
     });
   }
 
@@ -126,7 +135,7 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
 export async function upsertSidecarMetadata(
   vault: Vault,
   videoPath: string,
-  meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; classLevel: string }>
+  meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; classLevel: string; playCount: number; lastPlayedAt: number }>
 ): Promise<void> {
   const af = vault.getAbstractFileByPath(videoPath);
   if (!(af instanceof TFile)) return;
@@ -157,12 +166,33 @@ export async function upsertSidecarMetadata(
   }
 
   // apply updates
+  const prevDance = typeof fm.dance === "string" ? fm.dance : undefined;
   if (meta.stepName !== undefined) fm.stepName = meta.stepName;
   if (meta.description !== undefined) fm.description = meta.description;
   if (meta.dance !== undefined) fm.dance = meta.dance;
   if (meta.style !== undefined) fm.style = meta.style;
   const cls = meta.class ?? meta.classLevel;
   if (cls !== undefined) fm.class = cls;
+  if (meta.playCount !== undefined) fm.playCount = Math.max(0, Math.floor(meta.playCount as number));
+  if (meta.lastPlayedAt !== undefined) fm.lastPlayedAt = Math.floor(meta.lastPlayedAt as number);
+
+  // Ensure hashtags in body (outside frontmatter) for Graph View
+  const normalizeTag = (s: string) => s.trim().replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const danceTag = typeof fm.dance === 'string' && fm.dance ? normalizeTag(fm.dance) : "";
+  const tagsLine = danceTag ? `#DanceLibrary #${danceTag}` : `#DanceLibrary`;
+  // remove tag key from FM if previously stored there
+  if (Object.prototype.hasOwnProperty.call(fm, 'tags')) {
+    delete (fm as any).tags;
+  }
+
+  // Prepare body with hashtags at the top
+  const existingBody = typeof fm.__body === "string" ? fm.__body : "";
+  const bodyWithoutOldTagLine = existingBody
+    .split(/\r?\n/)
+    .filter((ln, idx) => !(idx === 0 && ln.trim().startsWith('#DanceLibrary')))
+    .join('\n')
+    .replace(/^\n+/, "");
+  const finalBody = `${tagsLine}\n\n${bodyWithoutOldTagLine}`.replace(/\n+$/m, "\n");
 
   const lines: string[] = ["---"];
   for (const [k, v] of Object.entries(fm)) {
@@ -171,8 +201,7 @@ export async function upsertSidecarMetadata(
     lines.push(`${k}: ${String(v)}`);
   }
   lines.push("---");
-  const body = typeof fm.__body === "string" ? fm.__body.replace(/^\n+/, "") : "";
-  const out = lines.join("\n") + "\n\n" + body;
+  const out = lines.join("\n") + "\n\n" + finalBody;
 
   if (existing instanceof TFile) {
     await vault.modify(existing, out);

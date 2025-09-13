@@ -1,10 +1,10 @@
 {
     "id": "obsidian-danap-plugin",
-    "name": "Dance Repository",
+    "name": "danap: Dance Repository",
     "version": "0.1.0",
     "minAppVersion": "0.15.0",
-    "description": "Browse dance steps as a phone-style video dashboard with overlay and swipe navigation.",
-    "author": "",
-    "authorUrl": "",
+    "description": "Browse, storage and Organize your dance steps as a phone-style video dashboard with overlay and swipe navigation.",
+    "author": "Joaquin Dillen",
+    "authorUrl": "https://github.com/JoaquinDillen",
     "isDesktopOnly": false
 }

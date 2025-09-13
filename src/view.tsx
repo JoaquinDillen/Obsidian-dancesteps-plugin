@@ -23,7 +23,7 @@ export class DanceRepoView extends ItemView {
     return "Dance Library";
   }
   getIcon(): string {
-    return "play-circle";
+    return "dance";
   }
 
   async onOpen(): Promise<void> {
@@ -89,31 +89,7 @@ export class DanceRepoView extends ItemView {
       }
     };
 
-    const saveMeta = async (
-      videoPath: string,
-      meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string }>
-    ) => {
-      try {
-        await upsertSidecarMetadata(this.app.vault, videoPath, meta);
-        new Notice("Step updated");
-      } catch (e) {
-        console.error(e);
-        new Notice("Failed to update step");
-      }
-    };
-
-    const ensureFolder = async (folder: string) => {
-      const parts = folder.split("/").filter(Boolean);
-      let cur = "";
-      for (const p of parts) {
-        cur = cur ? `${cur}/${p}` : p;
-        const af = this.app.vault.getAbstractFileByPath(cur);
-        if (!af) {
-          try { await this.app.vault.createFolder(cur); } catch {}
-        }
-      }
-    };
-
+    // Helpers used by metadata save/rename
     const slug = (input?: string) => {
       const s = (input ?? "").trim();
       if (!s) return "";
@@ -135,6 +111,78 @@ export class DanceRepoView extends ItemView {
         candidate = `${base} ${i}.${ext}`;
       }
       return candidate;
+    };
+
+    const saveMeta = async (
+      videoPath: string,
+      meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; playCount: number; lastPlayedAt: number }>
+    ): Promise<string | void> => {
+      try {
+        let finalPath = videoPath;
+        // If stepName provided, consider renaming the underlying video + sidecar to match
+        const desired = (meta.stepName || "").trim();
+        if (desired) {
+          const af = this.app.vault.getAbstractFileByPath(videoPath);
+          if (af instanceof TFile) {
+            const parentPath = af.parent?.path || "";
+            const ext = af.extension;
+            const currentBase = af.basename;
+            const targetSlug = slug(desired) || `video-${Date.now()}`;
+            if (targetSlug !== currentBase) {
+              // compute unique new video path and rename
+              const intendedVideo = normalizePath(`${parentPath}/${targetSlug}.${ext}`);
+              const newVideoPath = uniquePath(intendedVideo);
+              await this.app.vault.rename(af, newVideoPath);
+              finalPath = newVideoPath;
+              // try to move sidecar .md to match new basename
+              const oldMdPath = normalizePath(`${parentPath}/${currentBase}.md`);
+              const newBase = newVideoPath.substring(newVideoPath.lastIndexOf("/") + 1, newVideoPath.lastIndexOf("."));
+              const targetMdPath = normalizePath(`${parentPath}/${newBase}.md`);
+              const mdAf = this.app.vault.getAbstractFileByPath(oldMdPath);
+              if (mdAf instanceof TFile) {
+                const conflict = this.app.vault.getAbstractFileByPath(targetMdPath);
+                if (!conflict) {
+                  try { await this.app.vault.rename(mdAf, targetMdPath); } catch {}
+                }
+              }
+            }
+          }
+        }
+
+        // Upsert metadata on the (possibly renamed) file
+        await upsertSidecarMetadata(this.app.vault, finalPath, meta);
+        // Cleanup: if an old sidecar remains (due to conflict preventing rename), remove it
+        if (finalPath !== videoPath) {
+          const oldParent = videoPath.substring(0, videoPath.lastIndexOf("/"));
+          const oldBase = videoPath.substring(videoPath.lastIndexOf("/") + 1, videoPath.lastIndexOf("."));
+          const oldMdPath = normalizePath(`${oldParent}/${oldBase}.md`);
+          const newParent = finalPath.substring(0, finalPath.lastIndexOf("/"));
+          const newBase = finalPath.substring(finalPath.lastIndexOf("/") + 1, finalPath.lastIndexOf("."));
+          const newMdPath = normalizePath(`${newParent}/${newBase}.md`);
+          const oldMd = this.app.vault.getAbstractFileByPath(oldMdPath);
+          const newMd = this.app.vault.getAbstractFileByPath(newMdPath);
+          if (oldMd && newMd && oldMdPath !== newMdPath && oldMd instanceof TFile) {
+            try { await this.app.vault.delete(oldMd); } catch {}
+          }
+        }
+        new Notice("Step updated");
+        if (finalPath !== videoPath) return finalPath;
+      } catch (e) {
+        console.error(e);
+        new Notice("Failed to update step");
+      }
+    };
+
+    const ensureFolder = async (folder: string) => {
+      const parts = folder.split("/").filter(Boolean);
+      let cur = "";
+      for (const p of parts) {
+        cur = cur ? `${cur}/${p}` : p;
+        const af = this.app.vault.getAbstractFileByPath(cur);
+        if (!af) {
+          try { await this.app.vault.createFolder(cur); } catch {}
+        }
+      }
     };
 
     const importVideo = async (file: File) => {

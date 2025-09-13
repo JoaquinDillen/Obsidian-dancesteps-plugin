@@ -4,7 +4,8 @@
  * Registers the custom Dance Repository view, a ribbon icon and command to
  * open it, and exposes plugin settings. Keeps lifecycle clean and idempotent.
  */
-import { Plugin, WorkspaceLeaf, TFile, Notice } from "obsidian";
+import { Plugin, WorkspaceLeaf, TFile, Notice, addIcon } from "obsidian";
+import dancingIcon from "./src/ui/dancing-svgrepo-com.svg";
 import { DanceRepoSettingTab, DEFAULT_SETTINGS, type DanceRepoSettings } from "./src/settings";
 import { DanceRepoView, VIEW_TYPE_DANCE_REPO } from "./src/view";
 import { organizeVideoFile, VIDEO_EXTS } from "./src/organize";
@@ -17,13 +18,22 @@ export default class DanceRepoPlugin extends Plugin {
         // Load persisted settings (with defaults)
         await this.loadSettings();
 
+        // Register the custom dancing SVG from src/ui for ribbon/tab use
+        // Normalize the SVG to remove fixed size and use currentColor
+        const normalizedDancingIcon = dancingIcon
+            .replace(/<\?xml[^>]*>/g, "")
+            .replace(/<!--[\s\S]*?-->/g, "")
+            .replace(/\s(width|height)\s*=\s*"[^"]*"/g, "")
+            .replace(/fill\s*=\s*"#[0-9a-fA-F]{3,6}"/g, 'fill="currentColor"');
+        addIcon("dance", normalizedDancingIcon);
+
         this.registerView(
             VIEW_TYPE_DANCE_REPO,
             (leaf: WorkspaceLeaf) => new DanceRepoView(leaf, this)
         );
 
         // Ribbon shortcut to open the main view
-        this.addRibbonIcon("play-circle", "Open Dance Repository", () => this.activateView());
+        this.addRibbonIcon("dance", "Open Dance Repository", () => this.activateView());
 
         this.addCommand({
             id: "open-dance-repository",

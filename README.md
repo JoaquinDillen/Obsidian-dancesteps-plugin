@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="src/media/dancestepsplugin.svg" alt="Dance Steps Plugin Logo" width="320">
+
+  **A Dance Steps Library Plugin for Obsidian**
+
+</div>
+
+
 # Dance Repository (Obsidian Plugin)
 
 Browse and organize your dance practice videos inside Obsidian. Dance Repository adds a dedicated “Dance Library” view with a fast, phone‑style grid, powerful search and filters, and a fullscreen viewer. Edit step metadata and (optionally) auto‑organize new videos into a clean folder structure.

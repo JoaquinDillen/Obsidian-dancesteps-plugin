@@ -12,7 +12,7 @@ type Props = {
     openPath: (p: string) => Promise<void>;
     revealPath: (p: string) => Promise<void>;
     copyPath: (p: string) => Promise<void>;
-    saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string }>) => Promise<void>;
+    saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; playCount: number; lastPlayedAt: number }>) => Promise<string | void>;
     importVideo?: (file: File) => Promise<DanceStepItem>;
     deletePath?: (p: string) => Promise<void>;
   };
@@ -43,7 +43,11 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
       playCount: 0,
       lastPlayedAt: undefined,
     }));
-    setAllSteps(mapped);
+    setAllSteps(mapped.map((m, i) => ({
+      ...m,
+      playCount: items[i]?.playCount ?? 0,
+      lastPlayedAt: items[i]?.lastPlayedAt ?? m.lastPlayedAt,
+    })));
   }, [items, toUrl]);
 
   const handleAddStep = () => {
@@ -100,13 +104,33 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
         onDeleteStep={async (id) => { await actions?.deletePath?.(id); }}
         onSaveEdit={async (originalId, updated) => {
           // Persist via sidecar metadata
-          await actions?.saveMeta?.(originalId, {
+          const newPath = await actions?.saveMeta?.(originalId, {
             stepName: updated.stepName,
             description: updated.description,
             dance: updated.dance,
             style: updated.style,
             class: updated.class,
+            playCount: updated.playCount,
+            lastPlayedAt: updated.lastPlayedAt ?? Date.now(),
           });
+          // Update parent source-of-truth state so Dashboard re-sync preserves edits
+          setAllSteps((prev) => prev.map((s) => {
+            if (s.id !== originalId) return s;
+            const id = newPath && newPath !== originalId ? newPath : s.id;
+            return {
+              ...s,
+              id,
+              videoImport: newPath && newPath !== originalId ? toUrl(newPath) : s.videoImport,
+              stepName: updated.stepName,
+              description: updated.description,
+              class: updated.class,
+              dance: updated.dance,
+              style: updated.style,
+              duration: updated.duration,
+              playCount: updated.playCount,
+              lastPlayedAt: updated.lastPlayedAt,
+            };
+          }));
         }}
         externalEdit={externalEdit}
       />

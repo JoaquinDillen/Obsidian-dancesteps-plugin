@@ -13,10 +13,11 @@ export interface DanceStepItem extends DanceStepMeta {
   basename: string; // filename without extension
   ext: VideoExt | string;
   thumbPath?: string; // optional image with same basename
+  playCount?: number;
+  lastPlayedAt?: number;
 }
 
 export interface DanceRepoState {
   items: DanceStepItem[];
   currentIndex: number;
 }
-
