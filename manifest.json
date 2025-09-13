@@ -1,6 +1,6 @@
 {
-    "id": "obsidian-danap-plugin",
-    "name": "danap: Dance Repository",
+    "id": "obsidian-danceteps-plugin",
+    "name": "danceteps: Dance Repository",
     "version": "0.1.0",
     "minAppVersion": "0.15.0",
     "description": "Browse, storage and Organize your dance steps as a phone-style video dashboard with overlay and swipe navigation.",
