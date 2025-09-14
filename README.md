@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="src/media/dancestepsplugin.png" alt="Dance Steps Plugin Logo" width="500">
+  <img src="src/media/dancestepsplugin.png" alt="Dance Steps Plugin Logo" width="510">
 
   **A Dance Steps Library Plugin for Obsidian**
 
