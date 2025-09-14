@@ -155,7 +155,7 @@ function VideoThumb({ src, alt }: { src: string; alt?: string }) {
     triedRef.current = true;
     const video = document.createElement("video");
     video.muted = true;
-    (video as any).playsInline = true;
+    video.playsInline = true;
     video.preload = "auto";
     video.src = src;
     const onLoaded = async () => {

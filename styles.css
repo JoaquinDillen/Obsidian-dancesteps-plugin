@@ -117,6 +117,9 @@ If your plugin does not need CSS, delete this file.
 .workspace-leaf:has(.view-content[data-type="dance-repo-view"]) .view-content { padding-top: 0 !important; margin-top: 0 !important; }
 .view-content[data-type="dance-repo-view"] > *:first-child { margin-top: 0 !important; }
 
+/* Settings: make text inputs expand to full width via class, not inline styles */
+.dr-settings .setting-item-control input[type="text"].dr-input-full { width: 100%; }
+
 /* Shrink Obsidian's native view header for this view only */
 .workspace-leaf.dr-compact-header .view-header {
   height: 0 !important;

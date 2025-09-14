@@ -243,12 +243,19 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
       return;
     }
 
-    onSave({
-      ...formData,
-      duration: Math.round(formData.duration || computedDuration || 0),
-      // Preserve the original video path in the payload
+    const payload: Omit<StepItem, 'id' | 'addedAt'> = {
       videoImport: videoUrl,
-    } as any);
+      stepName: formData.stepName,
+      description: formData.description,
+      class: formData.class,
+      dance: formData.dance,
+      style: formData.style,
+      duration: Math.round(formData.duration || computedDuration || 0),
+      thumbnail: undefined,
+      playCount: formData.playCount ?? 0,
+      lastPlayedAt: formData.lastPlayedAt,
+    };
+    onSave(payload);
     
     onClose();
   };

@@ -29,9 +29,7 @@ export class DanceRepoView extends ItemView {
   async onOpen(): Promise<void> {
     // Remove default view padding to pull header flush to the top
     this.containerEl.addClass("dr-view");
-    // Ensure the content element has no padding/margins inline (overrides theme quirks)
-    (this.containerEl as HTMLElement).style.padding = "0";
-    (this.containerEl as HTMLElement).style.margin = "0";
+    // Styling handled via CSS classes to respect themes/snippets
     // Compact the Obsidian view header for this leaf so our in-app header sits at the very top
     const leafEl = this.containerEl.closest('.workspace-leaf') as HTMLElement | null;
     if (leafEl) leafEl.classList.add('dr-compact-header');
@@ -56,7 +54,7 @@ export class DanceRepoView extends ItemView {
     // 1) scan vault for videos (respects settings.rootFolder)
     const items: DanceStepItem[] = await scanDanceSteps(this.app.vault, {
       rootFolder: this.plugin.settings.rootFolder,
-    } as any);
+    });
 
     // 2) helper: vault path -> resource URL
     const toUrl = (vaultPath: string) =>
@@ -74,10 +72,11 @@ export class DanceRepoView extends ItemView {
 
     const revealPath = async (p: string) => {
       await openPath(p);
-      // typings may not expose commands; cast to any
-      (this.app as any).commands?.executeCommandById?.(
-        "file-explorer:reveal-active-file"
-      );
+      // typings may not expose commands on App; feature-detect safely
+      const maybeCommands = (this.app as unknown as { commands?: { executeCommandById?: (id: string) => void } }).commands;
+      if (maybeCommands && typeof maybeCommands.executeCommandById === 'function') {
+        maybeCommands.executeCommandById("file-explorer:reveal-active-file");
+      }
     };
 
     const copyPath = async (p: string) => {
@@ -162,7 +161,7 @@ export class DanceRepoView extends ItemView {
           const oldMd = this.app.vault.getAbstractFileByPath(oldMdPath);
           const newMd = this.app.vault.getAbstractFileByPath(newMdPath);
           if (oldMd && newMd && oldMdPath !== newMdPath && oldMd instanceof TFile) {
-            try { await this.app.vault.delete(oldMd); } catch {}
+            try { await this.app.fileManager.trashFile(oldMd); } catch {}
           }
         }
         new Notice("Step updated");
@@ -222,9 +221,9 @@ export class DanceRepoView extends ItemView {
           const mdPath = normalizePath(`${af.parent?.path ?? ""}/${af.basename}.md`);
           const md = this.app.vault.getAbstractFileByPath(mdPath);
           if (md instanceof TFile) {
-            await this.app.vault.delete(md);
+            await this.app.fileManager.trashFile(md);
           }
-          await this.app.vault.delete(af);
+          await this.app.fileManager.trashFile(af);
           new Notice("Step deleted");
         } else {
           new Notice("File not found: " + p);

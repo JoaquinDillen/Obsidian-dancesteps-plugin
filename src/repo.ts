@@ -4,6 +4,23 @@ import type { DanceStepItem } from "./types";
 const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "m4v", "ogg", "avi"]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 
+function isRecord(val: unknown): val is Record<string, unknown> {
+  return typeof val === "object" && val !== null && !Array.isArray(val);
+}
+
+type SidecarFM = {
+  stepName?: string;
+  description?: string;
+  dance?: string;
+  style?: string;
+  class?: string;
+  classLevel?: string;
+  playCount?: number;
+  lastPlayedAt?: number;
+  tags?: unknown;
+  __body?: string;
+} & Record<string, unknown>;
+
 function isVideo(file: TFile): boolean {
   return VIDEO_EXTS.has(file.extension.toLowerCase());
 }
@@ -26,8 +43,10 @@ function findThumbFor(vault: Vault, file: TFile): TFile | null {
 async function readSidecarDescription(vault: Vault, file: TFile): Promise<string | undefined> {
   const parent = file.parent;
   if (!parent) return undefined;
-  const md = parent.children.find((c) => c instanceof TFile && c.extension.toLowerCase() === "md" && c.basename === file.basename) as TFile | undefined;
-  if (!md) return undefined;
+  const md = parent.children.find(
+    (c) => c instanceof TFile && c.extension.toLowerCase() === "md" && c.basename === file.basename
+  );
+  if (!(md instanceof TFile)) return undefined;
   try {
     const content = await vault.read(md);
     // try frontmatter 'description' first
@@ -36,9 +55,9 @@ async function readSidecarDescription(vault: Vault, file: TFile): Promise<string
       const end = content.indexOf("\n---", 3);
       if (end > 0) {
         const yaml = content.slice(3, end).trim();
-        const data = parseYaml(yaml) as any;
-        if (data && typeof data.description === "string" && data.description.trim()) {
-          return String(data.description).trim();
+        const data = parseYaml(yaml) as unknown;
+        if (isRecord(data) && typeof data.description === "string" && data.description.trim()) {
+          return data.description.trim();
         }
       }
     }
@@ -53,16 +72,18 @@ async function readSidecarDescription(vault: Vault, file: TFile): Promise<string
 async function readSidecarFrontmatter(vault: Vault, file: TFile): Promise<Record<string, any> | null> {
   const parent = file.parent;
   if (!parent) return null;
-  const md = parent.children.find((c) => c instanceof TFile && c.extension.toLowerCase() === "md" && c.basename === file.basename) as TFile | undefined;
-  if (!md) return null;
+  const md = parent.children.find(
+    (c) => c instanceof TFile && c.extension.toLowerCase() === "md" && c.basename === file.basename
+  );
+  if (!(md instanceof TFile)) return null;
   try {
     const content = await vault.read(md);
     if (content.startsWith("---")) {
       const end = content.indexOf("\n---", 3);
       if (end > 0) {
         const yaml = content.slice(3, end).trim();
-        const data = parseYaml(yaml) as any;
-        return data ?? null;
+        const data = parseYaml(yaml) as unknown;
+        return isRecord(data) ? (data as SidecarFM) : null;
       }
     }
     return null;
@@ -105,11 +126,11 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
       if (typeof fm.classLevel === "string" && fm.classLevel.trim()) classLevel = fm.classLevel.trim();
     }
 
-    const playCount = typeof (fm as any)?.playCount === "number" && isFinite((fm as any).playCount)
-      ? Math.max(0, Math.floor((fm as any).playCount))
+    const playCount = typeof fm?.playCount === "number" && isFinite(fm.playCount)
+      ? Math.max(0, Math.floor(fm.playCount))
       : undefined;
-    const lastPlayedAt = typeof (fm as any)?.lastPlayedAt === "number" && isFinite((fm as any).lastPlayedAt)
-      ? (fm as any).lastPlayedAt
+    const lastPlayedAt = typeof fm?.lastPlayedAt === "number" && isFinite(fm.lastPlayedAt)
+      ? fm.lastPlayedAt
       : undefined;
 
     items.push({
@@ -144,7 +165,7 @@ export async function upsertSidecarMetadata(
   const mdPath = normalizePath(`${parent.path}/${af.basename}.md`);
   const existing = vault.getAbstractFileByPath(mdPath);
 
-  const fm: Record<string, any> = {};
+  const fm: SidecarFM = {};
   if (existing instanceof TFile) {
     try {
       const content = await vault.read(existing);
@@ -152,7 +173,8 @@ export async function upsertSidecarMetadata(
         const end = content.indexOf("\n---", 3);
         if (end > 0) {
           const yaml = content.slice(3, end).trim();
-          Object.assign(fm, parseYaml(yaml) as any);
+          const parsed = parseYaml(yaml) as unknown;
+          if (isRecord(parsed)) Object.assign(fm, parsed);
           const body = content.slice(end + 4);
           // keep body if any
           fm.__body = body;
@@ -182,7 +204,7 @@ export async function upsertSidecarMetadata(
   const tagsLine = danceTag ? `#DanceLibrary #${danceTag}` : `#DanceLibrary`;
   // remove tag key from FM if previously stored there
   if (Object.prototype.hasOwnProperty.call(fm, 'tags')) {
-    delete (fm as any).tags;
+    delete fm.tags;
   }
 
   // Prepare body with hashtags at the top

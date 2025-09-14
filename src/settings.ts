@@ -4,7 +4,7 @@
  * Provides a declarative, self-contained settings editor and an interface
  * `DanceRepoSettings` with sane defaults in `DEFAULT_SETTINGS`.
  */
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import { scanDanceSteps } from "./repo";
 import type DanceRepoPlugin from "../main";
 
@@ -60,13 +60,12 @@ export class DanceRepoSettingTab extends PluginSettingTab {
         "Vault-relative folder to scan for videos (leave blank for entire vault)."
       )
       .addText((t) => {
-        t.setPlaceholder("e.g. Dance/")
-          .setValue(this.plugin.settings.rootFolder)
-          .then(() => { (t.inputEl as HTMLInputElement).style.width = "100%"; })
-          .onChange(async (val) => {
-            this.plugin.settings.rootFolder = val.trim();
-            await this.plugin.saveSettings();
-          });
+        t.setPlaceholder("e.g. Dance/").setValue(this.plugin.settings.rootFolder);
+        t.inputEl.addClass("dr-input-full");
+        t.onChange(async (val) => {
+          this.plugin.settings.rootFolder = val.trim();
+          await this.plugin.saveSettings();
+        });
       });
 
     new Setting(containerEl)
@@ -92,32 +91,29 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Library root")
       .setDesc("All imported videos will be copied inside this folder.")
-      .addText(t => t
-        .setPlaceholder("Dance")
-        .setValue(this.plugin.settings.libraryRoot)
-        .then(() => { (t.inputEl as HTMLInputElement).style.width = "100%"; })
-        .onChange(async v => { this.plugin.settings.libraryRoot = v || "Dance"; await this.plugin.saveSettings(); })
-      );
+      .addText(t => {
+        t.setPlaceholder("Dance").setValue(this.plugin.settings.libraryRoot);
+        t.inputEl.addClass("dr-input-full");
+        t.onChange(async v => { this.plugin.settings.libraryRoot = v || "Dance"; await this.plugin.saveSettings(); });
+      });
 
     new Setting(containerEl)
       .setName("Folder template")
       .setDesc("Subfolders under the library root. Placeholders: {dance} {style} {class}")
-      .addText(t => t
-        .setPlaceholder("{dance}/{style}/{class}")
-        .setValue(this.plugin.settings.organizeTemplate)
-        .then(() => { (t.inputEl as HTMLInputElement).style.width = "100%"; })
-        .onChange(async v => { this.plugin.settings.organizeTemplate = v || "{dance}/{style}/{class}"; await this.plugin.saveSettings(); })
-      );
+      .addText(t => {
+        t.setPlaceholder("{dance}/{style}/{class}").setValue(this.plugin.settings.organizeTemplate);
+        t.inputEl.addClass("dr-input-full");
+        t.onChange(async v => { this.plugin.settings.organizeTemplate = v || "{dance}/{style}/{class}"; await this.plugin.saveSettings(); });
+      });
 
     new Setting(containerEl)
       .setName("Filename template")
       .setDesc("Final filename (without extension). Placeholders: {stepName}")
-      .addText(t => t
-        .setPlaceholder("{stepName}")
-        .setValue(this.plugin.settings.filenameTemplate)
-        .then(() => { (t.inputEl as HTMLInputElement).style.width = "100%"; })
-        .onChange(async v => { this.plugin.settings.filenameTemplate = v || "{stepName}"; await this.plugin.saveSettings(); })
-      );
+      .addText(t => {
+        t.setPlaceholder("{stepName}").setValue(this.plugin.settings.filenameTemplate);
+        t.inputEl.addClass("dr-input-full");
+        t.onChange(async v => { this.plugin.settings.filenameTemplate = v || "{stepName}"; await this.plugin.saveSettings(); });
+      });
 
     new Setting(containerEl)
       .setName("Auto-organize new videos")
@@ -145,7 +141,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     const classSelect = classSetting.controlEl.createEl("select");
     classSelect.classList.add("dropdown");
     // Inline actions beside section title
-    const classNameEl = (classSetting as any).nameEl as HTMLElement;
+    const classNameEl = classSetting.nameEl as HTMLElement;
     classNameEl.classList.add("dr-settings-name-row");
     const classActions = classNameEl.createDiv({ cls: "dr-settings-inline-actions" });
     const classSelectAllBtn = classActions.createEl("button", { text: "Select all" });
@@ -226,7 +222,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     const danceSelect = danceSetting.controlEl.createEl("select");
     danceSelect.classList.add("dropdown");
     // Inline actions beside section title
-    const danceNameEl = (danceSetting as any).nameEl as HTMLElement;
+    const danceNameEl = danceSetting.nameEl as HTMLElement;
     danceNameEl.classList.add("dr-settings-name-row");
     const danceActions = danceNameEl.createDiv({ cls: "dr-settings-inline-actions" });
     const danceSelectAllBtn = danceActions.createEl("button", { text: "Select all" });
@@ -295,7 +291,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     const styleSelect = styleSetting.controlEl.createEl("select");
     styleSelect.classList.add("dropdown");
     // Inline actions beside section title
-    const styleNameEl = (styleSetting as any).nameEl as HTMLElement;
+    const styleNameEl = styleSetting.nameEl as HTMLElement;
     styleNameEl.classList.add("dr-settings-name-row");
     const styleActions = styleNameEl.createDiv({ cls: "dr-settings-inline-actions" });
     const styleSelectAllBtn = styleActions.createEl("button", { text: "Select all" });
@@ -358,7 +354,8 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     // Populate dropdowns from current vault
     const populateClassOptions = async () => {
       const keep = classSelect.firstElementChild as HTMLOptionElement | null;
-      classSelect.innerHTML = "";
+      // Clear options safely without using innerHTML
+      (classSelect as HTMLSelectElement).options.length = 0;
       if (keep) classSelect.appendChild(keep);
       const steps = await scanDanceSteps(this.app.vault, { rootFolder: this.plugin.settings.rootFolder });
       const classes = unique(steps.map(s => s.classLevel).filter(Boolean) as string[]);
@@ -369,7 +366,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
     const populateDanceOptions = async () => {
       // ensure we only keep placeholder, then add options not selected
       const keep = danceSelect.firstElementChild as HTMLOptionElement | null;
-      danceSelect.innerHTML = "";
+      (danceSelect as HTMLSelectElement).options.length = 0;
       if (keep) danceSelect.appendChild(keep);
       const steps = await scanDanceSteps(this.app.vault, { rootFolder: this.plugin.settings.rootFolder });
       const dances = unique(steps.map(s => s.dance).filter(Boolean) as string[]);
@@ -379,7 +376,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
 
     const populateStyleOptions = async () => {
       const keep = styleSelect.firstElementChild as HTMLOptionElement | null;
-      styleSelect.innerHTML = "";
+      (styleSelect as HTMLSelectElement).options.length = 0;
       if (keep) styleSelect.appendChild(keep);
       const steps = await scanDanceSteps(this.app.vault, { rootFolder: this.plugin.settings.rootFolder });
       const styles = unique(steps.map(s => s.style).filter(Boolean) as string[]);

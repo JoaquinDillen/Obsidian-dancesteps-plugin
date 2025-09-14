@@ -118,10 +118,8 @@ class VideoImportModal extends Modal {
 
       // 4) clean up the staged files
       const stagedMd = this.app.vault.getAbstractFileByPath(mdPath);
-      // @ts-ignore remove exists on file manager
-      if (staged) await this.app.vault.delete(staged);
-      // @ts-ignore
-      if (stagedMd) await this.app.vault.delete(stagedMd);
+      if (staged) await this.app.fileManager.trashFile(staged);
+      if (stagedMd) await this.app.fileManager.trashFile(stagedMd);
 
       new Notice("Video imported.");
       this.close();

@@ -50,7 +50,7 @@ export default class DanceRepoPlugin extends Plugin {
         let leaf: WorkspaceLeaf | null = leaves.length > 0 ? leaves[0] : null;
         if (!leaf) {
             // Prefer opening as a main tab (not a sidebar widget), including on mobile
-            const getTabLeaf = (workspace as any).getLeaf?.bind(workspace);
+            const getTabLeaf = (workspace as unknown as { getLeaf?: (type?: string | boolean) => WorkspaceLeaf }).getLeaf?.bind(workspace);
             const target: WorkspaceLeaf = getTabLeaf ? getTabLeaf('tab') : workspace.getLeaf(true);
             await target.setViewState({ type: VIEW_TYPE_DANCE_REPO, active: true });
             leaf = target;

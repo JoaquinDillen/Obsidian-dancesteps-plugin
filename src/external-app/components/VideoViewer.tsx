@@ -182,7 +182,8 @@ export function VideoViewer({
   // Recompute on resize and when stage size changes
   useEffect(() => {
     computeRail();
-    const ro = new (window as any).ResizeObserver?.(() => computeRail());
+    const RO = (window as unknown as { ResizeObserver?: new (cb: ResizeObserverCallback) => ResizeObserver }).ResizeObserver;
+    const ro = RO ? new RO(() => computeRail()) : undefined;
     if (ro && stageRef.current) ro.observe(stageRef.current);
     const onResize = () => computeRail();
     window.addEventListener('resize', onResize);
@@ -194,21 +195,23 @@ export function VideoViewer({
 
   // Drag listeners for custom slider
   useEffect(() => {
-    const onMove = (e: MouseEvent | TouchEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (!isScrubbing) return;
-      const x = (e as TouchEvent).touches && (e as TouchEvent).touches.length
-        ? (e as TouchEvent).touches[0].clientX
-        : (e as MouseEvent).clientX;
+      setTimeFromClientX(e.clientX);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isScrubbing) return;
+      const x = e.touches && e.touches.length ? e.touches[0].clientX : 0;
       setTimeFromClientX(x);
     };
     const onUp = () => setIsScrubbing(false);
-    window.addEventListener('mousemove', onMove as any);
-    window.addEventListener('touchmove', onMove as any, { passive: false } as any);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchend', onUp);
     return () => {
-      window.removeEventListener('mousemove', onMove as any);
-      window.removeEventListener('touchmove', onMove as any as any);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('touchend', onUp);
     };

@@ -59,7 +59,7 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
       const file = input.files?.[0];
       if (!file) return;
       try {
-        const newItem = await (actions as any)?.importVideo?.(file);
+        const newItem = await actions?.importVideo?.(file);
         if (!newItem) return;
         const mapped: AppStep = {
           id: newItem.path,
