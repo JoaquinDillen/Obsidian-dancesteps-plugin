@@ -105,70 +105,36 @@ export function TourOverlay({ steps, onClose }: TourOverlayProps) {
   if (!step) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "none" }}>
+    <div className="dr-tour-overlay">
       {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", pointerEvents: "auto" }}
-      />
+      <div className="dr-tour-backdrop" onClick={onClose} />
 
       {/* Tooltip */}
       {pos && (
         <div
           role="dialog"
           aria-modal="true"
-          style={{
-            position: "absolute",
-            top: pos.top,
-            left: pos.left,
-            width: 320,
-            background: "var(--background-primary, #1e1e1e)",
-            color: "var(--text-normal, #fff)",
-            borderRadius: 8,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
-            padding: 12,
-            pointerEvents: "auto",
-          }}
+          className="dr-tour-tip"
+          style={{ top: pos.top, left: pos.left }}
           ref={tipRef}
         >
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>{step.title}</div>
-          <div style={{ fontSize: 13, opacity: 0.9 }}>{step.body}</div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "space-between" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ background: "transparent", color: "var(--text-muted, #bbb)", border: 0, padding: "6px 8px", cursor: "pointer" }}
-            >
-              Skip
-            </button>
-            <div style={{ display: "flex", gap: 8 }}>
+          <div className="dr-tour-title">{step.title}</div>
+          <div className="dr-tour-body">{step.body}</div>
+          <div className="dr-tour-actions">
+            <button type="button" onClick={onClose} className="dr-tour-skip">Skip</button>
+            <div className="dr-tour-nav">
               <button
                 type="button"
                 onClick={prev}
                 disabled={index === 0}
-                style={{
-                  background: "transparent",
-                  color: index === 0 ? "#666" : "var(--text-normal, #fff)",
-                  border: "1px solid var(--background-modifier-border, #444)",
-                  borderRadius: 6,
-                  padding: "6px 10px",
-                  cursor: index === 0 ? "default" : "pointer",
-                }}
+                className="dr-tour-prev"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => (index === steps.length - 1 ? onClose() : next())}
-                style={{
-                  background: "var(--interactive-accent, #6b9)",
-                  color: "#000",
-                  border: 0,
-                  borderRadius: 6,
-                  padding: "6px 12px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className="dr-tour-next"
               >
                 {index === steps.length - 1 ? "Done" : "Next"}
               </button>

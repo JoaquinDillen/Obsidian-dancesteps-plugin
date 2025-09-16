@@ -89,7 +89,7 @@ export function FilterDrawer({ open, onOpenChange, filters, onFiltersChange, ste
       <SheetContent side="bottom" className="dr-filter-sheet" aria-describedby="dr-filter-desc">
         {/* Hidden description for a11y (outside to avoid nesting issues) */}
         <SheetDescription id="dr-filter-desc">
-          <span style={{position:"absolute",width:1,height:1,margin:-1,clip:"rect(0 0 0 0)",overflow:"hidden"}}>
+          <span className="sr-only">
             Filter and sort the dance steps by class, dance type, and style.
           </span>
         </SheetDescription>

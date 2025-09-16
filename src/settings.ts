@@ -209,7 +209,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
         .onClick(async () => {
           this.plugin.settings.onboardingSeen = false;
           await this.plugin.saveSettings();
-          new (window as any).Notice?.("Welcome tour will show next time")
+          new Notice("Welcome tour will show next time");
         })
       );
 

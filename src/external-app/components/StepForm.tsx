@@ -286,7 +286,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
           </div>
           <DialogDescription id="dr-step-desc">
             {/* Visually hidden description to satisfy Radix a11y */}
-            <span style={{position:"absolute",width:1,height:1,margin:-1,clip:"rect(0 0 0 0)",overflow:"hidden"}}>
+            <span className="sr-only">
               Edit the dance step name, description, dance type, style and class.
             </span>
           </DialogDescription>
@@ -300,7 +300,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
                 const ext = (editingStep?.id || "").split(".").pop()?.toLowerCase();
                 if (ext === "avi") {
                   return (
-                    <div style={{ padding: 12, color: 'var(--text-muted)' }}>
+                    <div className="dr-muted-note">
                       Preview not available for .avi on this device. The video is still imported; you can edit details and save.
                     </div>
                   );

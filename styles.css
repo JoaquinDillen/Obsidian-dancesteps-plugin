@@ -479,6 +479,52 @@ If your plugin does not need CSS, delete this file.
   box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
   z-index: 10 !important;
 }
+.dr-vv-info { bottom: 150px; }
+
+/* Tour overlay styles */
+.dr-tour-overlay { position: fixed; inset: 0; z-index: 99999; pointer-events: none; }
+.dr-tour-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); pointer-events: auto; }
+.dr-tour-tip {
+  position: absolute;
+  width: 320px;
+  background: var(--background-primary, #1e1e1e);
+  color: var(--text-normal, #fff);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  padding: 12px;
+  pointer-events: auto;
+}
+.dr-tour-title { font-weight: 600; margin-bottom: 6px; }
+.dr-tour-body { font-size: 13px; opacity: 0.9; }
+.dr-tour-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: space-between; }
+.dr-tour-skip { background: transparent; color: var(--text-muted, #bbb); border: 0; padding: 6px 8px; cursor: pointer; }
+.dr-tour-nav { display: flex; gap: 8px; }
+.dr-tour-prev { background: transparent; color: var(--text-normal, #fff); border: 1px solid var(--background-modifier-border, #444); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.dr-tour-prev[disabled] { color: #666; cursor: default; }
+.dr-tour-next { background: var(--interactive-accent, #6b9); color: #000; border: 0; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer; }
+
+/* Video viewer additional styles (move inline to CSS) */
+.dr-vv-top { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: flex-end; padding: 8px; }
+.dr-vv-progress { position:absolute; bottom: calc(env(safe-area-inset-bottom, 0) + 48px); z-index:5; padding: 16px 8px 8px; }
+.dr-vv-rail { position: relative; height: 16px; border-radius: 999px; background: #000; }
+.dr-vv-progress-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #fff; border-radius: 999px; }
+.dr-vv-thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,0.25); pointer-events: none; }
+
+/* Muted note block (replaces inline styles) */
+.dr-muted-note { padding: 12px; color: var(--text-muted); }
+
+/* Visually hidden content for a11y */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
 .dr-vv-times { display:flex; justify-content:space-between; color: rgba(255,255,255,0.88); font-size: 12px; margin: 0 0 8px 0; padding: 0 2px; }
 .dr-vv-info { position:absolute; left:0; right:0; bottom: 180px; z-index:3; background: transparent; color:#fff; }
 .dr-vv-info-inner { padding: 12px; }
@@ -547,6 +593,7 @@ If your plugin does not need CSS, delete this file.
 .dr-settings .dr-settings-tools { display:flex; justify-content:flex-end; gap:8px; margin-bottom: 8px; }
 .dr-settings .dr-btn { border:1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); border-radius: 8px; padding: 4px 8px; cursor: pointer; }
 .dr-settings .dr-btn.ghost { background: transparent; }
+.dr-inline-count { margin-left: 6px; font-size: 12px; }
 .dr-vv-times { display:flex; justify-content:space-between; color: rgba(255,255,255,0.85); font-size: 12px; margin: 0 0 8px 0; }
 .dr-vv-range { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; background: #000; border-radius: 999px; outline: none; }
 .dr-vv-range::-webkit-slider-runnable-track { height: 14px; background: transparent; border-radius: 999px; }

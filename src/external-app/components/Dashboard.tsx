@@ -236,9 +236,7 @@ export function Dashboard({
           <Button onClick={() => setShowFilters(true)} aria-label="Open filters" data-tour="filters">
             <Filter aria-hidden="true" />
             {hasActiveFilters ? (
-              <span style={{ marginLeft: 6, fontSize: 12 }}>
-                {totalActiveFilters}
-              </span>
+              <span className="dr-inline-count">{totalActiveFilters}</span>
             ) : null}
           </Button>
         </div>
@@ -297,16 +295,7 @@ export function Dashboard({
       >
         <DialogContent className="dr-fullscreen-dialog" aria-describedby={undefined}>
           {/* Visually hidden title for accessibility */}
-          <DialogTitle
-            style={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              margin: -1,
-              clip: "rect(0 0 0 0)",
-              overflow: "hidden",
-            }}
-          >
+          <DialogTitle className="sr-only">
             Video viewer
           </DialogTitle>
           {viewerStep && (

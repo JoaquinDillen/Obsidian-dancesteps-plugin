@@ -247,7 +247,7 @@ export function VideoViewer({
         />
 
         {/* Top overlay: Back + Menu */}
-        <div className="dr-vv-top" style={{ left: rail.left, right: 'auto', width: rail.width }}>
+        <div className="dr-vv-top" style={{ left: rail.left, width: rail.width }}>
           <div className="flex-1" />
           <Button variant="ghost" size="icon" onClick={onBack} className="dr-vv-close-btn">
             <CloseIcon className="dr-vv-close-icon" strokeWidth={3} />
@@ -258,10 +258,7 @@ export function VideoViewer({
 
         {/* Info overlay (only when paused) */}
         {!isPlaying && (
-          <div
-            className="dr-vv-info pointer-events-none"
-            style={{ left: rail.left, right: 'auto', width: rail.width, bottom: 150 }}
-          >
+          <div className="dr-vv-info pointer-events-none" style={{ left: rail.left, width: rail.width }}>
             <div className="dr-vv-info-inner">
               <h2 className="dr-vv-title">{step.stepName}</h2>
               {step.description && (
@@ -358,16 +355,17 @@ export function VideoViewer({
             onPointerDown={(e) => { setIsScrubbing(true); setTimeFromClientX(e.clientX); }}
             onMouseDown={(e) => { setIsScrubbing(true); setTimeFromClientX(e.clientX); }}
             onTouchStart={(e) => { setIsScrubbing(true); setTimeFromClientX((e.touches?.[0]?.clientX) || 0); }}
-            style={{ position: 'relative', height: 16, borderRadius: 999, background: '#000' }}
             aria-label="Seek"
           >
             {/* Progress */}
             <div
-              style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(duration ? (currentTime / duration) : 0) * 100}%`, background: '#fff', borderRadius: 999 }}
+              className="dr-vv-progress-fill"
+              style={{ width: `${(duration ? (currentTime / duration) : 0) * 100}%` }}
             />
             {/* Thumb */}
             <div
-              style={{ position: 'absolute', top: '50%', left: `${(duration ? (currentTime / duration) : 0) * 100}%`, transform: 'translate(-50%, -50%)', width: 28, height: 28, borderRadius: '50%', background: '#fff', border: '2px solid #fff', boxShadow: '0 0 0 2px rgba(0,0,0,0.25)', pointerEvents: 'none' }}
+              className="dr-vv-thumb"
+              style={{ left: `${(duration ? (currentTime / duration) : 0) * 100}%` }}
             />
           </div>
         </div>
