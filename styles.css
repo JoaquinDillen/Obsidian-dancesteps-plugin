@@ -158,6 +158,8 @@ If your plugin does not need CSS, delete this file.
 .dr-card-thumb { position: relative; aspect-ratio: 9 / 16; background: #000; }
 .dr-card-thumb img, .dr-card-thumb video { width: 100%; height: 100%; object-fit: cover; display:block; background: #000; }
 .dr-card-menu { position:absolute; top:8px; right:8px; z-index:3; width:28px; height:28px; border-radius:6px; background: rgba(0,0,0,0.35); color:#fff; display:flex; align-items:center; justify-content:center; }
+.dr-icon-12 { width: 12px; height: 12px; margin-right: 6px; }
+.dr-play-icon { width: 16px; height: 16px; color: var(--dr-card-play-icon-color, #fff); }
 .dr-card-menu:hover { background: rgba(0,0,0,0.55); }
 .dr-card-menu .dr-card-menu-icon { width: 14px; height: 14px; }
 .dr-card-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:auto; z-index:1; }

@@ -79,7 +79,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                         onEditStep(step);
                       }}
                     >
-                      <Edit style={{ width: 12, height: 12, marginRight: 6 }} aria-hidden="true" />
+                      <Edit className="dr-icon-12" aria-hidden="true" />
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -88,7 +88,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                         onDeleteStep(step.id);
                       }}
                     >
-                      <Trash2 style={{ width: 12, height: 12, marginRight: 6 }} aria-hidden="true" />
+                      <Trash2 className="dr-icon-12" aria-hidden="true" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -102,7 +102,7 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                     onClick={(e) => { e.stopPropagation(); onPlayFull?.(step); }}
                     aria-label="Play fullscreen"
                   >
-                    <Play style={{ width: 16, height: 16, color: '#fff' }} aria-hidden="true" />
+                    <Play className="dr-play-icon" aria-hidden="true" />
                   </button>
                 </div>
 
