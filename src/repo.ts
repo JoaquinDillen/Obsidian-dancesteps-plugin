@@ -13,6 +13,7 @@ type SidecarFM = {
   description?: string;
   dance?: string;
   style?: string;
+  danceStyle?: string;
   class?: string;
   classLevel?: string;
   playCount?: number;
@@ -110,7 +111,7 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
     // infer categories from first three parent folders if present: dance/style/class
     let name = f.basename;
     let dance = parts.length > 1 ? parts[0] : undefined;
-    let style = parts.length > 2 ? parts[1] : undefined;
+    let danceStyle = parts.length > 2 ? parts[1] : undefined;
     let classLevel = parts.length > 3 ? parts[2] : undefined;
     const thumb = findThumbFor(vault, f);
     let description = await readSidecarDescription(vault, f);
@@ -121,7 +122,9 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
       if (typeof fm.stepName === "string" && fm.stepName.trim()) name = fm.stepName.trim();
       if (typeof fm.description === "string" && fm.description.trim()) description = fm.description.trim();
       if (typeof fm.dance === "string" && fm.dance.trim()) dance = fm.dance.trim();
-      if (typeof fm.style === "string" && fm.style.trim()) style = fm.style.trim();
+      // Frontmatter "style"/"danceStyle" denotes dance styling metadata, not CSS
+      if (typeof fm.style === "string" && fm.style.trim()) danceStyle = fm.style.trim();
+      if (typeof fm.danceStyle === "string" && fm.danceStyle.trim()) danceStyle = fm.danceStyle.trim();
       if (typeof fm.class === "string" && fm.class.trim()) classLevel = fm.class.trim();
       if (typeof fm.classLevel === "string" && fm.classLevel.trim()) classLevel = fm.classLevel.trim();
     }
@@ -140,7 +143,7 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
       name,
       description,
       dance,
-      style,
+      danceStyle,
       classLevel,
       thumbPath: thumb?.path,
       playCount,
@@ -156,7 +159,7 @@ export async function scanDanceSteps(vault: Vault, opts: ScanOptions = {}): Prom
 export async function upsertSidecarMetadata(
   vault: Vault,
   videoPath: string,
-  meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; classLevel: string; playCount: number; lastPlayedAt: number }>
+  meta: Partial<{ stepName: string; description: string; dance: string; danceStyle: string; class: string; classLevel: string; playCount: number; lastPlayedAt: number }>
 ): Promise<void> {
   const af = vault.getAbstractFileByPath(videoPath);
   if (!(af instanceof TFile)) return;
@@ -192,7 +195,10 @@ export async function upsertSidecarMetadata(
   if (meta.stepName !== undefined) fm.stepName = meta.stepName;
   if (meta.description !== undefined) fm.description = meta.description;
   if (meta.dance !== undefined) fm.dance = meta.dance;
-  if (meta.style !== undefined) fm.style = meta.style;
+  if (meta.danceStyle !== undefined) {
+    fm.style = meta.danceStyle;
+    fm.danceStyle = meta.danceStyle;
+  }
   const cls = meta.class ?? meta.classLevel;
   if (cls !== undefined) fm.class = cls;
   if (meta.playCount !== undefined) fm.playCount = Math.max(0, Math.floor(meta.playCount as number));

@@ -28,7 +28,7 @@ export class LibraryModal extends Modal {
       }
       const info = card.createDiv({ cls: "dance-repo-card-info" });
       info.createEl("div", { text: item.name, cls: "dance-repo-card-title" });
-      const meta = [item.dance, item.style, item.classLevel].filter(Boolean).join(" • ");
+      const meta = [item.dance, item.danceStyle, item.classLevel].filter(Boolean).join(" • ");
       if (meta) info.createEl("div", { text: meta, cls: "dance-repo-card-meta" });
 
       card.onClickEvent(() => {
@@ -43,4 +43,3 @@ export class LibraryModal extends Modal {
     contentEl.empty();
   }
 }
-

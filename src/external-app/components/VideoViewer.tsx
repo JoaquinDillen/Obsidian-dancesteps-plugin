@@ -277,9 +277,9 @@ export function VideoViewer({
                     {step.dance}
                   </Badge>
                 )}
-                {step.style && (
+                {step.danceStyle && (
                   <Badge variant="secondary" className="dr-vv-badge">
-                    {step.style}
+                    {step.danceStyle}
                   </Badge>
                 )}
               </div>

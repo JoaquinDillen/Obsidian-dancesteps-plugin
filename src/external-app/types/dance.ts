@@ -5,7 +5,7 @@ export type StepItem = {
   description?: string;
   class?: string;
   dance?: string;
-  style?: string;
+  danceStyle?: string;
   thumbnail?: string;
   duration?: number;
   addedAt: number;

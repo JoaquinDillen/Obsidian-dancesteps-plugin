@@ -114,7 +114,7 @@ export class DanceRepoView extends ItemView {
 
     const saveMeta = async (
       videoPath: string,
-      meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; playCount: number; lastPlayedAt: number }>
+      meta: Partial<{ stepName: string; description: string; dance: string; danceStyle: string; class: string; playCount: number; lastPlayedAt: number }>
     ): Promise<string | void> => {
       try {
         let finalPath = videoPath;
@@ -206,7 +206,7 @@ export class DanceRepoView extends ItemView {
         name: stem,
         description: "",
         dance: undefined,
-        style: undefined,
+        danceStyle: undefined,
         classLevel: undefined,
         thumbPath: undefined,
       };

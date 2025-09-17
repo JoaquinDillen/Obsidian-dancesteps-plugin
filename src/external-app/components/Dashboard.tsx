@@ -144,7 +144,7 @@ export function Dashboard({
       description: data.description,
       class: data.class,
       dance: data.dance,
-      style: data.style,
+      danceStyle: data.danceStyle,
       duration: data.duration,
       playCount: data.playCount,
       lastPlayedAt: data.lastPlayedAt,

@@ -109,13 +109,13 @@ export function GridLibrary({ steps, onStepSelect, onEditStep, onDeleteStep, onP
                 {/* Title + tags overlay with bottom gradient */}
                 <div className="dr-card-title">
                   <div className="dr-card-title-text">{step.stepName}</div>
-                  {(step.dance || step.style) && (
+                  {(step.dance || step.danceStyle) && (
                     <div className="dr-card-tag-row">
                       {step.dance && (
                         <span className="dr-tag-badge">{step.dance}</span>
                       )}
-                      {step.style && (
-                        <span className="dr-tag-badge">{step.style}</span>
+                      {step.danceStyle && (
+                        <span className="dr-tag-badge">{step.danceStyle}</span>
                       )}
                     </div>
                   )}

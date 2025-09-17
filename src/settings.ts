@@ -379,7 +379,7 @@ export class DanceRepoSettingTab extends PluginSettingTab {
       (styleSelect as HTMLSelectElement).options.length = 0;
       if (keep) styleSelect.appendChild(keep);
       const steps = await scanDanceSteps(this.app.vault, { rootFolder: this.plugin.settings.rootFolder });
-      const styles = unique(steps.map(s => s.style).filter(Boolean) as string[]);
+      const styles = unique(steps.map(s => s.danceStyle).filter(Boolean) as string[]);
       availableStyles = styles;
       styles.filter(s => !selectedStyles.includes(s)).forEach(s => addStyleOption(s));
     };

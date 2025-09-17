@@ -4,7 +4,7 @@ export interface DanceStepMeta {
   name: string;
   description?: string;
   dance?: string;
-  style?: string;
+  danceStyle?: string;
   classLevel?: string;
 }
 

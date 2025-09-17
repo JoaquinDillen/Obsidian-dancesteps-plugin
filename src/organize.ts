@@ -61,7 +61,7 @@ async function readSidecarFrontmatter(app: App, file: TFile) {
       description: fm.description ?? "",
       class: fm.class ?? fm.classLevel ?? "",
       dance: fm.dance ?? "",
-      style: fm.style ?? "",
+      danceStyle: fm.danceStyle ?? fm.style ?? "",
     };
   }
   // fallback to filename only
@@ -70,7 +70,7 @@ async function readSidecarFrontmatter(app: App, file: TFile) {
     description: "",
     class: "",
     dance: "",
-    style: "",
+    danceStyle: "",
   };
 }
 
@@ -88,7 +88,8 @@ export async function organizeVideoFile(app: App, file: TFile, settings: DanceRe
 
   const relFolder = applyTemplate(folderTpl, {
     dance: slug(meta.dance),
-    style: slug(meta.style),
+    style: slug(meta.danceStyle),
+    danceStyle: slug(meta.danceStyle),
     class: slug(meta.class),
     stepName: slug(meta.stepName),
   }).replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
@@ -115,7 +116,8 @@ export async function organizeVideoFile(app: App, file: TFile, settings: DanceRe
       `description: ${meta.description ?? ""}`,
       `class: ${meta.class ?? ""}`,
       `dance: ${meta.dance ?? ""}`,
-      `style: ${meta.style ?? ""}`,
+      `danceStyle: ${meta.danceStyle ?? ""}`,
+      `style: ${meta.danceStyle ?? ""}`,
       `playCount: 0`,
       `lastPlayedAt:`,
       "thumbnail:",

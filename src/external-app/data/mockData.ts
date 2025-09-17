@@ -8,7 +8,7 @@ export function getUniqueValues(steps: StepItem[]) {
   for (const s of steps) {
     if (s.class) classes.add(s.class);
     if (s.dance) dances.add(s.dance);
-    if (s.style) styles.add(s.style);
+    if (s.danceStyle) styles.add(s.danceStyle);
   }
   return {
     classes: Array.from(classes).sort(),
@@ -28,12 +28,12 @@ export function filterAndSortSteps(
   let list = steps.filter((s) => {
     if (q) {
       const hay =
-        `${s.stepName} ${s.description || ""} ${s.dance || ""} ${s.style || ""} ${s.class || ""}`.toLowerCase();
+        `${s.stepName} ${s.description || ""} ${s.dance || ""} ${s.danceStyle || ""} ${s.class || ""}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (filters.classes?.length && (!s.class || !filters.classes.includes(s.class))) return false;
     if (filters.dances?.length && (!s.dance || !filters.dances.includes(s.dance))) return false;
-    if (filters.styles?.length && (!s.style || !filters.styles.includes(s.style))) return false;
+    if (filters.styles?.length && (!s.danceStyle || !filters.styles.includes(s.danceStyle))) return false;
     return true;
   });
 

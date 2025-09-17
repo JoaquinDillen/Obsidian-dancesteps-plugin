@@ -12,7 +12,7 @@ type Props = {
     openPath: (p: string) => Promise<void>;
     revealPath: (p: string) => Promise<void>;
     copyPath: (p: string) => Promise<void>;
-    saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; style: string; class: string; playCount: number; lastPlayedAt: number }>) => Promise<string | void>;
+    saveMeta?: (videoPath: string, meta: Partial<{ stepName: string; description: string; dance: string; danceStyle: string; class: string; playCount: number; lastPlayedAt: number }>) => Promise<string | void>;
     importVideo?: (file: File) => Promise<DanceStepItem>;
     deletePath?: (p: string) => Promise<void>;
   };
@@ -36,7 +36,7 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
       description: it.description,
       class: it.classLevel,
       dance: it.dance,
-      style: it.style,
+      danceStyle: it.danceStyle,
       thumbnail: it.thumbPath ? toUrl(it.thumbPath) : undefined,
       duration: undefined,
       addedAt: Date.now(),
@@ -68,7 +68,7 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
           description: newItem.description,
           class: newItem.classLevel,
           dance: newItem.dance,
-          style: newItem.style,
+          danceStyle: newItem.danceStyle,
           thumbnail: newItem.thumbPath ? toUrl(newItem.thumbPath) : undefined,
           duration: undefined,
           addedAt: Date.now(),
@@ -108,7 +108,7 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
             stepName: updated.stepName,
             description: updated.description,
             dance: updated.dance,
-            style: updated.style,
+            danceStyle: updated.danceStyle,
             class: updated.class,
             playCount: updated.playCount,
             lastPlayedAt: updated.lastPlayedAt ?? Date.now(),
@@ -125,7 +125,7 @@ export default function ObsidianApp({ items, toUrl, actions, onboardingNeeded, o
               description: updated.description,
               class: updated.class,
               dance: updated.dance,
-              style: updated.style,
+              danceStyle: updated.danceStyle,
               duration: updated.duration,
               playCount: updated.playCount,
               lastPlayedAt: updated.lastPlayedAt,

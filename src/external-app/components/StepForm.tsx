@@ -139,7 +139,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
     description: "",
     class: "",
     dance: "",
-    style: "",
+    danceStyle: "",
     duration: 0,
     playCount: 0,
     lastPlayedAt: Date.now()
@@ -159,7 +159,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
         description: editingStep.description || "",
         class: editingStep.class || "",
         dance: editingStep.dance || "",
-        style: editingStep.style || "",
+        danceStyle: editingStep.danceStyle || "",
         duration: editingStep.duration || 0,
         playCount: editingStep.playCount || 0,
         lastPlayedAt: editingStep.lastPlayedAt || Date.now()
@@ -171,7 +171,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
         description: "",
         class: "",
         dance: "",
-        style: "",
+        danceStyle: "",
         duration: 0,
         playCount: 0,
         lastPlayedAt: Date.now()
@@ -202,14 +202,14 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
   // Ensure custom style mode stays in sync with current values
   useEffect(() => {
     const d = formData.dance;
-    const s = (formData.style || "").trim();
+    const s = (formData.danceStyle || "").trim();
     const options = d ? DANCE_STYLE_OPTIONS[d] : undefined;
     if (options && s && !options.includes(s)) {
       setIsCustomStyle(true);
     } else if (options && (!s || options.includes(s))) {
       setIsCustomStyle(false);
     }
-  }, [formData.dance, formData.style, DANCE_STYLE_OPTIONS]);
+  }, [formData.dance, formData.danceStyle, DANCE_STYLE_OPTIONS]);
 
   // Keep custom dance toggle in sync with value list
   useEffect(() => {
@@ -249,7 +249,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
       description: formData.description,
       class: formData.class,
       dance: formData.dance,
-      style: formData.style,
+      danceStyle: formData.danceStyle,
       duration: Math.round(formData.duration || computedDuration || 0),
       thumbnail: undefined,
       playCount: formData.playCount ?? 0,
@@ -361,7 +361,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
                 }
                 // Reset style when dance changes or toggling custom
                 setIsCustomStyle(false);
-                handleInputChange("style", "");
+                handleInputChange("danceStyle", "");
               }}
             >
               <option value="" disabled>Select dance type</option>
@@ -393,12 +393,12 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
 
           {/* Style / Variant */}
           <div className="dr-form-field">
-            <label htmlFor="style" className="text-sm font-medium">Style/Variant</label>
+            <label htmlFor="danceStyle" className="text-sm font-medium">Style/Variant</label>
             {formData.dance && DANCE_STYLE_OPTIONS[formData.dance] ? (
               <>
                 <select
                   className="border rounded-md h-9 px-3 w-full border-input"
-                  value={isCustomStyle ? "__custom__" : (formData.style || "")}
+                  value={isCustomStyle ? "__custom__" : (formData.danceStyle || "")}
                   onChange={(e) => {
                     const v = e.target.value;
                     if (v === "__custom__") {
@@ -406,7 +406,7 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
                       // don't set style yet; wait for input
                     } else {
                       setIsCustomStyle(false);
-                      handleInputChange("style", v);
+                      handleInputChange("danceStyle", v);
                     }
                   }}
                 >
@@ -418,24 +418,24 @@ export function StepForm({ isOpen, onClose, onSave, editingStep, suggestions }: 
                 </select>
                 {isCustomStyle && (
                   <Input
-                    id="style"
-                    value={formData.style}
-                    onChange={(e) => handleInputChange("style", e.target.value)}
+                    id="danceStyle"
+                    value={formData.danceStyle}
+                    onChange={(e) => handleInputChange("danceStyle", e.target.value)}
                     placeholder="Type a custom style/variant"
                   />
                 )}
               </>
             ) : (
               <Input
-                id="style"
-                value={formData.style}
-                onChange={(e) => handleInputChange("style", e.target.value)}
+                id="danceStyle"
+                value={formData.danceStyle}
+                onChange={(e) => handleInputChange("danceStyle", e.target.value)}
                 placeholder="e.g., On1, Sensual, Argentine"
-                list={suggestions?.styles?.length ? "style-suggestions" : undefined}
+                list={suggestions?.styles?.length ? "dance-style-suggestions" : undefined}
               />
             )}
             {(!formData.dance || !DANCE_STYLE_OPTIONS[formData.dance]) && suggestions?.styles?.length ? (
-              <datalist id="style-suggestions">
+              <datalist id="dance-style-suggestions">
                 {suggestions.styles.map((s) => (
                   <option key={s} value={s} />
                 ))}

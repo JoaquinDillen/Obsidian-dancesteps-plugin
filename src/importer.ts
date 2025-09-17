@@ -13,7 +13,7 @@ class VideoImportModal extends Modal {
   fileInput!: HTMLInputElement;
   stepName = "";
   dance = "";
-  style = "";
+  danceStyle = "";
   classLevel = "";
 
   constructor(app: App, settings: DanceRepoSettings) {
@@ -44,7 +44,7 @@ class VideoImportModal extends Modal {
     new Setting(contentEl)
       .setName("Style")
       .addText((t) =>
-        t.onChange((v) => (this.style = v.trim()))
+        t.onChange((v) => (this.danceStyle = v.trim()))
       );
 
     // Class
@@ -98,7 +98,8 @@ class VideoImportModal extends Modal {
         `description:`,
         `class: ${this.classLevel || ""}`,
         `dance: ${this.dance || ""}`,
-        `style: ${this.style || ""}`,
+        `danceStyle: ${this.danceStyle || ""}`,
+        `style: ${this.danceStyle || ""}`,
         `playCount: 0`,
         `lastPlayedAt:`,
         "thumbnail:",
